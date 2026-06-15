@@ -3,3 +3,5 @@ build/
 DerivedData/
 .swiftpm/
 .DS_Store
+*.xcuserdata/
+xcuserdata/
