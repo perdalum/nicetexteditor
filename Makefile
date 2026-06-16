@@ -14,9 +14,10 @@ build:
 
 app: build
 	rm -rf "$(APP_DIR)"
-	mkdir -p "$(APP_DIR)/Contents/MacOS"
+	mkdir -p "$(APP_DIR)/Contents/MacOS" "$(APP_DIR)/Contents/Resources"
 	cp "$(EXECUTABLE)" "$(APP_DIR)/Contents/MacOS/$(APP_NAME)"
 	cp Info.plist "$(APP_DIR)/Contents/Info.plist"
+	cp "Resources/$(APP_NAME).icns" "$(APP_DIR)/Contents/Resources/$(APP_NAME).icns"
 
 clean:
 	rm -rf .build "$(BUILD_DIR)"

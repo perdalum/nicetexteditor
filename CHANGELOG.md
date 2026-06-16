@@ -4,6 +4,12 @@ All notable changes to NiceTextEditor will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic versioning.
 
+## [1.0.1] - 2026-06-16
+
+### Added
+
+- Custom macOS app icon asset.
+
 ## [1.0.0] - 2026-06-16
 
 ### Added
