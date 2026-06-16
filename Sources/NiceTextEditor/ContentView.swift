@@ -9,6 +9,8 @@ struct ContentView: View {
     @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
     @State private var editorFontSize = 15.0
     @State private var tabWidth = 4
+    @State private var editorBackgroundColor: EditorBackgroundColor = .system
+    @State private var editorForegroundColor: EditorForegroundColor = .system
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
     @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
@@ -70,6 +72,8 @@ struct ContentView: View {
                 proportionalFontName: proportionalFontName,
                 fontSize: editorFontSize,
                 tabWidth: tabWidth,
+                backgroundColor: editorBackgroundColor.color,
+                foregroundColor: editorForegroundColor.color,
                 fullScreenTextWidthPercent: fullScreenTextWidthPercent,
                 executeSelectionShortcut: executeSelectionShortcut,
                 replaceSelectionWithPipelineShortcut: replaceSelectionWithPipelineShortcut,
@@ -117,11 +121,51 @@ struct ContentView: View {
         }
         .toolbar {
             ToolbarItemGroup {
+                backgroundColorMenu
+                foregroundColorMenu
                 zoomMenu
                 tabWidthMenu
                 fullScreenWidthMenu
             }
         }
+    }
+
+    private var backgroundColorMenu: some View {
+        Menu {
+            ForEach(EditorBackgroundColor.allCases, id: \.self) { color in
+                Button {
+                    editorBackgroundColor = color
+                } label: {
+                    if editorBackgroundColor == color {
+                        Label(color.displayName, systemImage: "checkmark")
+                    } else {
+                        Text(color.displayName)
+                    }
+                }
+            }
+        } label: {
+            Label("Background", systemImage: "paintpalette")
+        }
+        .help("Editor background color")
+    }
+
+    private var foregroundColorMenu: some View {
+        Menu {
+            ForEach(EditorForegroundColor.allCases, id: \.self) { color in
+                Button {
+                    editorForegroundColor = color
+                } label: {
+                    if editorForegroundColor == color {
+                        Label(color.displayName, systemImage: "checkmark")
+                    } else {
+                        Text(color.displayName)
+                    }
+                }
+            }
+        } label: {
+            Label("Text", systemImage: "textformat")
+        }
+        .help("Editor text color")
     }
 
     private var zoomMenu: some View {

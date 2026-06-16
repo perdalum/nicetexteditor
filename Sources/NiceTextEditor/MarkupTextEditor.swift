@@ -84,6 +84,8 @@ struct MarkupTextEditor: NSViewRepresentable {
     let proportionalFontName: String
     let fontSize: Double
     let tabWidth: Int
+    let backgroundColor: NSColor
+    let foregroundColor: NSColor
     let fullScreenTextWidthPercent: Double
     let executeSelectionShortcut: String
     let replaceSelectionWithPipelineShortcut: String
@@ -105,7 +107,7 @@ struct MarkupTextEditor: NSViewRepresentable {
         let textView = WorksheetTextView()
 
         scrollView.drawsBackground = true
-        scrollView.backgroundColor = .textBackgroundColor
+        scrollView.backgroundColor = backgroundColor
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = false
@@ -116,6 +118,8 @@ struct MarkupTextEditor: NSViewRepresentable {
         textView.string = text
         textView.isRichText = false
         textView.importsGraphics = false
+        textView.drawsBackground = true
+        textView.backgroundColor = backgroundColor
         textView.allowsUndo = true
         textView.usesFindPanel = true
         textView.usesFindBar = true
@@ -158,6 +162,9 @@ struct MarkupTextEditor: NSViewRepresentable {
             textView.selectedRanges = selectedRanges.clamped(toLength: (text as NSString).length)
             context.coordinator.isApplyingProgrammaticChange = false
         }
+
+        scrollView.backgroundColor = backgroundColor
+        textView.backgroundColor = backgroundColor
 
         context.coordinator.startObservingWindow(for: textView)
         context.coordinator.configureShortcuts(for: textView)
@@ -449,34 +456,36 @@ struct MarkupTextEditor: NSViewRepresentable {
 
             let nsString = storage.string as NSString
             let fullRange = NSRange(location: 0, length: nsString.length)
-            guard fullRange.length > 0 else { return }
-
             let selectedRanges = textView.selectedRanges
             let proportionalFont = resolvedProportionalFont()
             let monospaceFont = NSFont.monospacedSystemFont(ofSize: CGFloat(parent.fontSize), weight: .regular)
             let proportionalParagraphStyle = paragraphStyle(for: proportionalFont)
             let monospaceParagraphStyle = paragraphStyle(for: monospaceFont)
 
-            storage.beginEditing()
-            storage.setAttributes([
-                .font: proportionalFont,
-                .foregroundColor: NSColor.textColor,
-                .paragraphStyle: proportionalParagraphStyle
-            ], range: fullRange)
+            textView.backgroundColor = parent.backgroundColor
 
-            for range in verbatimBodyRanges(in: nsString) {
-                storage.addAttributes([
-                    .font: monospaceFont,
-                    .foregroundColor: NSColor.textColor,
-                    .paragraphStyle: monospaceParagraphStyle
-                ], range: range)
+            if fullRange.length > 0 {
+                storage.beginEditing()
+                storage.setAttributes([
+                    .font: proportionalFont,
+                    .foregroundColor: parent.foregroundColor,
+                    .paragraphStyle: proportionalParagraphStyle
+                ], range: fullRange)
+
+                for range in verbatimBodyRanges(in: nsString) {
+                    storage.addAttributes([
+                        .font: monospaceFont,
+                        .foregroundColor: parent.foregroundColor,
+                        .paragraphStyle: monospaceParagraphStyle
+                    ], range: range)
+                }
+                storage.endEditing()
             }
-            storage.endEditing()
 
             textView.selectedRanges = selectedRanges.clamped(toLength: nsString.length)
             textView.typingAttributes = [
                 .font: proportionalFont,
-                .foregroundColor: NSColor.textColor,
+                .foregroundColor: parent.foregroundColor,
                 .paragraphStyle: proportionalParagraphStyle
             ]
         }

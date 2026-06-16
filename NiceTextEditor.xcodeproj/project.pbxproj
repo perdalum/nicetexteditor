@@ -13,6 +13,7 @@
 		A10000000000000000000004 /* PlainTextDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* PlainTextDocument.swift */; };
 		A10000000000000000000005 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* SettingsView.swift */; };
 		A10000000000000000000006 /* WorksheetShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001C /* WorksheetShell.swift */; };
+		A10000000000000000000007 /* EditorColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* EditorColors.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,7 @@
 		A1000000000000000000001A /* Package.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 		A1000000000000000000001B /* Makefile */ = {isa = PBXFileReference; lastKnownFileType = text; path = Makefile; sourceTree = "<group>"; };
 		A1000000000000000000001C /* WorksheetShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorksheetShell.swift; sourceTree = "<group>"; };
+		A1000000000000000000001D /* EditorColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorColors.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +83,7 @@
 				A10000000000000000000014 /* PlainTextDocument.swift */,
 				A10000000000000000000015 /* SettingsView.swift */,
 				A1000000000000000000001C /* WorksheetShell.swift */,
+				A1000000000000000000001D /* EditorColors.swift */,
 			);
 			path = NiceTextEditor;
 			sourceTree = "<group>";
@@ -148,6 +151,7 @@
 				A10000000000000000000004 /* PlainTextDocument.swift in Sources */,
 				A10000000000000000000005 /* SettingsView.swift in Sources */,
 				A10000000000000000000006 /* WorksheetShell.swift in Sources */,
+				A10000000000000000000007 /* EditorColors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
