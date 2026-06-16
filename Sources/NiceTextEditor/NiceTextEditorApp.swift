@@ -11,6 +11,35 @@ struct NiceTextEditorApp: App {
         .commands {
             CommandGroup(after: .pasteboard) {
                 Divider()
+
+                Menu("Spelling and Grammar") {
+                    Button("Show Spelling and Grammar") { AppCommands.perform("showGuessPanel:") }
+                        .keyboardShortcut(":", modifiers: [.command])
+                    Button("Check Document Now") { AppCommands.perform("checkSpelling:") }
+                        .keyboardShortcut(";", modifiers: [.command])
+
+                    Divider()
+
+                    Button("Check Spelling While Typing") { AppCommands.perform("toggleContinuousSpellChecking:") }
+                    Button("Check Grammar With Spelling") { AppCommands.perform("toggleGrammarChecking:") }
+                    Button("Correct Spelling Automatically") { AppCommands.perform("toggleAutomaticSpellingCorrection:") }
+                }
+
+                Menu("Substitutions") {
+                    Button("Show Substitutions") { AppCommands.perform("orderFrontSubstitutionsPanel:") }
+
+                    Divider()
+
+                    Button("Smart Copy/Paste") { AppCommands.perform("toggleSmartInsertDelete:") }
+                    Button("Smart Quotes") { AppCommands.perform("toggleAutomaticQuoteSubstitution:") }
+                    Button("Smart Dashes") { AppCommands.perform("toggleAutomaticDashSubstitution:") }
+                    Button("Smart Links") { AppCommands.perform("toggleAutomaticLinkDetection:") }
+                    Button("Data Detectors") { AppCommands.perform("toggleAutomaticDataDetection:") }
+                    Button("Text Replacement") { AppCommands.perform("toggleAutomaticTextReplacement:") }
+                }
+
+                Divider()
+
                 Button("Find…") { FindCommands.perform(.showFindInterface) }
                     .keyboardShortcut("f", modifiers: [.command])
                 Button("Find Next") { FindCommands.perform(.nextMatch) }

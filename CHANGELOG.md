@@ -4,6 +4,12 @@ All notable changes to NiceTextEditor will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic versioning.
 
+## [1.1.0] - 2026-06-16
+
+### Added
+
+- Standard `NSTextView` spelling, grammar, automatic correction, substitutions, smart quotes/dashes, and link/data detection, including Edit menu commands.
+
 ## [1.0.1] - 2026-06-16
 
 ### Added
