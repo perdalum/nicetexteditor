@@ -8,8 +8,10 @@ NiceTextEditor is a small macOS plain-text editor modelled after TextEdit. It is
 
 - Opens and saves plain-text files.
 - Uses the macOS proportional system font, SF Pro, by default.
-- Lets you configure the proportional font in Settings and adjust each document window’s text size independently from the toolbar or menu commands.
-- Lets you configure the full-screen text width as a percentage of the screen width.
+- Lets you configure the proportional font in Settings with the standard macOS Font panel.
+- Lets you adjust each document window’s text size independently from toolbar presets or View menu commands.
+- Lets you adjust each document window’s visual tab width from toolbar presets.
+- Lets you configure full-screen text width from the toolbar.
 - Provides an MPW/BBEdit-style UNIX worksheet: each document owns a background `/bin/zsh` process, selected commands can be run in-place, and selected text can be filtered through a prompted pipeline.
 - Supports standard macOS find commands: Command-F to search and Command-G / Shift-Command-G to move between matches with wrapping.
 - Adds visual-only scroll space below the text so the final line can be positioned about one quarter down from the top of the editor.

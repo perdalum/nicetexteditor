@@ -83,6 +83,7 @@ struct MarkupTextEditor: NSViewRepresentable {
     @Binding var text: String
     let proportionalFontName: String
     let fontSize: Double
+    let tabWidth: Int
     let fullScreenTextWidthPercent: Double
     let executeSelectionShortcut: String
     let replaceSelectionWithPipelineShortcut: String
@@ -453,22 +454,21 @@ struct MarkupTextEditor: NSViewRepresentable {
             let selectedRanges = textView.selectedRanges
             let proportionalFont = resolvedProportionalFont()
             let monospaceFont = NSFont.monospacedSystemFont(ofSize: CGFloat(parent.fontSize), weight: .regular)
-            let paragraphStyle = NSMutableParagraphStyle()
-            paragraphStyle.lineBreakMode = .byWordWrapping
-            paragraphStyle.allowsDefaultTighteningForTruncation = false
+            let proportionalParagraphStyle = paragraphStyle(for: proportionalFont)
+            let monospaceParagraphStyle = paragraphStyle(for: monospaceFont)
 
             storage.beginEditing()
             storage.setAttributes([
                 .font: proportionalFont,
                 .foregroundColor: NSColor.textColor,
-                .paragraphStyle: paragraphStyle
+                .paragraphStyle: proportionalParagraphStyle
             ], range: fullRange)
 
             for range in verbatimBodyRanges(in: nsString) {
                 storage.addAttributes([
                     .font: monospaceFont,
                     .foregroundColor: NSColor.textColor,
-                    .paragraphStyle: paragraphStyle
+                    .paragraphStyle: monospaceParagraphStyle
                 ], range: range)
             }
             storage.endEditing()
@@ -477,8 +477,21 @@ struct MarkupTextEditor: NSViewRepresentable {
             textView.typingAttributes = [
                 .font: proportionalFont,
                 .foregroundColor: NSColor.textColor,
-                .paragraphStyle: paragraphStyle
+                .paragraphStyle: proportionalParagraphStyle
             ]
+        }
+
+        private func paragraphStyle(for font: NSFont) -> NSMutableParagraphStyle {
+            let paragraphStyle = NSMutableParagraphStyle()
+            paragraphStyle.lineBreakMode = .byWordWrapping
+            paragraphStyle.allowsDefaultTighteningForTruncation = false
+
+            let clampedTabWidth = max(1, min(parent.tabWidth, 16))
+            let spaceWidth = max(1, (" " as NSString).size(withAttributes: [.font: font]).width)
+            paragraphStyle.defaultTabInterval = spaceWidth * CGFloat(clampedTabWidth)
+            paragraphStyle.tabStops = []
+
+            return paragraphStyle
         }
 
         private func resolvedProportionalFont() -> NSFont {

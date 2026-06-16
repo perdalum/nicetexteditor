@@ -8,6 +8,7 @@ struct ContentView: View {
     @AppStorage("proportionalFontName") private var proportionalFontName = "SF Pro"
     @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
     @State private var editorFontSize = 15.0
+    @State private var tabWidth = 4
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
     @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
@@ -68,6 +69,7 @@ struct ContentView: View {
                 text: $document.text,
                 proportionalFontName: proportionalFontName,
                 fontSize: editorFontSize,
+                tabWidth: tabWidth,
                 fullScreenTextWidthPercent: fullScreenTextWidthPercent,
                 executeSelectionShortcut: executeSelectionShortcut,
                 replaceSelectionWithPipelineShortcut: replaceSelectionWithPipelineShortcut,
@@ -115,30 +117,79 @@ struct ContentView: View {
         }
         .toolbar {
             ToolbarItemGroup {
-                Menu {
-                    FontChoiceButton(name: "SF Pro", selection: $proportionalFontName)
-                    FontChoiceButton(name: "New York", selection: $proportionalFontName)
-                    FontChoiceButton(name: "Helvetica Neue", selection: $proportionalFontName)
-                    FontChoiceButton(name: "Georgia", selection: $proportionalFontName)
-                    Divider()
-                    Button("More fonts…") { NSFontPanel.shared.orderFront(nil) }
-                } label: {
-                    Label("Font", systemImage: "textformat")
-                }
-
-                Menu {
-                    Button("Increase Text Size") { increaseTextSize() }
-                        .keyboardShortcut("+", modifiers: [.command])
-                    Button("Decrease Text Size") { decreaseTextSize() }
-                        .keyboardShortcut("-", modifiers: [.command])
-                    Button("Actual Size") { resetTextSize() }
-                        .keyboardShortcut("0", modifiers: [.command])
-                } label: {
-                    Label("\(Int(editorFontSize)) pt", systemImage: "textformat.size")
-                        .monospacedDigit()
-                }
+                zoomMenu
+                tabWidthMenu
+                fullScreenWidthMenu
             }
         }
+    }
+
+    private var zoomMenu: some View {
+        Menu {
+            ForEach([9.0, 12.0, 15.0, 18.0, 24.0, 30.0, 36.0], id: \.self) { size in
+                Button {
+                    editorFontSize = size
+                } label: {
+                    if Int(editorFontSize) == Int(size) {
+                        Label("\(Int(size)) pt", systemImage: "checkmark")
+                    } else {
+                        Text("\(Int(size)) pt")
+                    }
+                }
+            }
+
+            Divider()
+
+            Button("Zoom In") { increaseTextSize() }
+                .keyboardShortcut("+", modifiers: [.command])
+            Button("Zoom Out") { decreaseTextSize() }
+                .keyboardShortcut("-", modifiers: [.command])
+            Button("Actual Size") { resetTextSize() }
+                .keyboardShortcut("0", modifiers: [.command])
+        } label: {
+            Label("\(Int(editorFontSize)) pt", systemImage: "textformat.size")
+                .monospacedDigit()
+        }
+    }
+
+    private var tabWidthMenu: some View {
+        Menu {
+            ForEach([2, 4, 8, 16], id: \.self) { width in
+                Button {
+                    tabWidth = width
+                } label: {
+                    if tabWidth == width {
+                        Label("\(width)", systemImage: "checkmark")
+                    } else {
+                        Text("\(width)")
+                    }
+                }
+            }
+        } label: {
+            Label("Tab \(tabWidth)", systemImage: "increase.indent")
+                .monospacedDigit()
+        }
+        .help("Tab width")
+    }
+
+    private var fullScreenWidthMenu: some View {
+        Menu {
+            ForEach([50.0, 60.0, 70.0, 80.0, 90.0, 100.0], id: \.self) { percent in
+                Button {
+                    fullScreenTextWidthPercent = percent
+                } label: {
+                    if Int(fullScreenTextWidthPercent) == Int(percent) {
+                        Label("\(Int(percent))%", systemImage: "checkmark")
+                    } else {
+                        Text("\(Int(percent))%")
+                    }
+                }
+            }
+        } label: {
+            Label("\(Int(fullScreenTextWidthPercent))%", systemImage: "rectangle")
+                .monospacedDigit()
+        }
+        .help("Full-screen text width")
     }
 
     private func increaseTextSize() {
@@ -291,22 +342,5 @@ private final class WorksheetCommandHistoryFieldDelegate: NSObject, NSTextFieldD
     private func replaceText(in textView: NSTextView, with string: String) {
         textView.string = string
         textView.setSelectedRange(NSRange(location: (string as NSString).length, length: 0))
-    }
-}
-
-private struct FontChoiceButton: View {
-    let name: String
-    @Binding var selection: String
-
-    var body: some View {
-        Button {
-            selection = name
-        } label: {
-            if selection == name {
-                Label(name, systemImage: "checkmark")
-            } else {
-                Text(name)
-            }
-        }
     }
 }

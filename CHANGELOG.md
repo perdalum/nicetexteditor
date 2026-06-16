@@ -32,3 +32,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Worksheet pipeline prompts now focus the command field and support global Up/Down Arrow command history.
 - Visual-only bottom scroll space so the last line can be scrolled above the bottom of the editor without changing file contents.
 - Lower minimum document window size with an adaptive status bar for narrow windows.
+- Toolbar cleanup: font selection moved to Settings using the macOS Font panel, zoom gained preset choices and View menu commands, full-screen text width moved to a toolbar menu, and per-window tab width presets were added.

@@ -3,42 +3,25 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("proportionalFontName") private var proportionalFontName = "SF Pro"
-    @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
     @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
+    @StateObject private var fontPanel = FontPanelCoordinator()
 
     var body: some View {
         Form {
             Section("Editor Font") {
-                Picker("Proportional font", selection: $proportionalFontName) {
-                    Text("SF Pro (system)").tag("SF Pro")
-                    Text("New York").tag("New York")
-                    Text("Helvetica Neue").tag("Helvetica Neue")
-                    Text("Georgia").tag("Georgia")
-                    Text("Times New Roman").tag("Times New Roman")
-                }
-                .pickerStyle(.menu)
-
-                TextField("Font name", text: $proportionalFontName)
-                    .textFieldStyle(.roundedBorder)
-                    .help("Enter any installed PostScript font name or family name. SF Pro uses the macOS system font.")
-
-            }
-
-            Section("Full Screen") {
-                Slider(value: $fullScreenTextWidthPercent, in: 40...100, step: 5) {
-                    Text("Text width")
-                } minimumValueLabel: {
-                    Text("40%")
-                } maximumValueLabel: {
-                    Text("100%")
+                HStack {
+                    Text(proportionalFontName)
+                        .font(.system(.body, design: .monospaced))
+                    Spacer()
+                    Button("Choose Font…") {
+                        fontPanel.show(selectedFontName: proportionalFontName)
+                    }
                 }
 
-                Stepper(value: $fullScreenTextWidthPercent, in: 40...100, step: 5) {
-                    Text("Text width: \(Int(fullScreenTextWidthPercent))% of screen")
-                }
-                .help("When a document window is full screen, wrap text to this percentage of the screen width.")
+                Text("Choose the proportional editor font with the standard macOS Font panel. Text size is adjusted per document window from the toolbar or View menu.")
+                    .foregroundStyle(.secondary)
             }
 
             Section("Worksheet Shell") {
@@ -73,7 +56,11 @@ struct SettingsView: View {
         .padding(20)
         .frame(width: 560)
         .onAppear {
+            fontPanel.selectedFontName = proportionalFontName
             migrateWorksheetShortcutDefaults()
+        }
+        .onChange(of: fontPanel.selectedFontName) { _, newValue in
+            proportionalFontName = newValue
         }
     }
 
@@ -135,6 +122,33 @@ struct SettingsView: View {
             create: true
         )
         return baseURL.appendingPathComponent("NiceTextEditor", isDirectory: true)
+    }
+}
+
+@MainActor
+private final class FontPanelCoordinator: NSObject, ObservableObject {
+    @Published var selectedFontName = "SF Pro"
+
+    func show(selectedFontName: String) {
+        self.selectedFontName = selectedFontName
+        let fontManager = NSFontManager.shared
+        fontManager.target = self
+        fontManager.action = #selector(changeFont(_:))
+        fontManager.setSelectedFont(resolvedFont(), isMultiple: false)
+        NSFontPanel.shared.orderFront(nil)
+    }
+
+    @objc private func changeFont(_ sender: NSFontManager) {
+        let convertedFont = sender.convert(resolvedFont())
+        selectedFontName = convertedFont.fontName
+    }
+
+    private func resolvedFont() -> NSFont {
+        let requested = selectedFontName.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !requested.isEmpty, let font = NSFont(name: requested, size: 15) {
+            return font
+        }
+        return NSFont.systemFont(ofSize: 15)
     }
 }
 

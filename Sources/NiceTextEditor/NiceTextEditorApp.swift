@@ -6,7 +6,7 @@ struct NiceTextEditorApp: App {
     var body: some Scene {
         DocumentGroup(newDocument: PlainTextDocument()) { file in
             ContentView(document: file.$document, fileURL: file.fileURL)
-                .frame(minWidth: 360, minHeight: 300)
+                .frame(minWidth: 260, minHeight: 300)
         }
         .commands {
             CommandGroup(after: .pasteboard) {
@@ -20,11 +20,11 @@ struct NiceTextEditorApp: App {
                 Button("Use Selection for Find") { FindCommands.perform(.setSearchString) }
             }
 
-            CommandGroup(after: .textFormatting) {
+            CommandGroup(after: .toolbar) {
                 Divider()
-                Button("Increase Text Size") { AppCommands.perform("increaseEditorTextSize:") }
+                Button("Zoom In") { AppCommands.perform("increaseEditorTextSize:") }
                     .keyboardShortcut("+", modifiers: [.command])
-                Button("Decrease Text Size") { AppCommands.perform("decreaseEditorTextSize:") }
+                Button("Zoom Out") { AppCommands.perform("decreaseEditorTextSize:") }
                     .keyboardShortcut("-", modifiers: [.command])
                 Button("Actual Size") { AppCommands.perform("resetEditorTextSize:") }
                     .keyboardShortcut("0", modifiers: [.command])
