@@ -14,8 +14,8 @@ private protocol WorksheetTextViewDelegate: AnyObject {
 private final class WorksheetTextView: NSTextView {
     weak var worksheetCommandDelegate: WorksheetTextViewDelegate?
     var executeSelectionShortcut = "shift-return"
-    var replaceSelectionWithPipelineShortcut = "command-r"
-    var insertPipelineAfterSelectionShortcut = "command-shift-r"
+    var replaceSelectionWithPipelineShortcut = "command-e"
+    var insertPipelineAfterSelectionShortcut = "command-shift-e"
 
     override func keyDown(with event: NSEvent) {
         if handleWorksheetShortcut(event) { return }
@@ -27,19 +27,31 @@ private final class WorksheetTextView: NSTextView {
         return super.performKeyEquivalent(with: event)
     }
 
+    @objc func runSelectionInShell(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .executeSelection)
+    }
+
+    @objc func replaceSelectionWithPipeline(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .replaceSelectionWithPipeline)
+    }
+
+    @objc func insertPipelineAfterSelection(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .insertPipelineAfterSelection)
+    }
+
     private func handleWorksheetShortcut(_ event: NSEvent) -> Bool {
         if event.matchesShortcut(executeSelectionShortcut) {
-            worksheetCommandDelegate?.worksheetTextView(self, didRequest: .executeSelection)
+            runSelectionInShell(nil)
             return true
         }
 
         if event.matchesShortcut(replaceSelectionWithPipelineShortcut) {
-            worksheetCommandDelegate?.worksheetTextView(self, didRequest: .replaceSelectionWithPipeline)
+            replaceSelectionWithPipeline(nil)
             return true
         }
 
         if event.matchesShortcut(insertPipelineAfterSelectionShortcut) {
-            worksheetCommandDelegate?.worksheetTextView(self, didRequest: .insertPipelineAfterSelection)
+            insertPipelineAfterSelection(nil)
             return true
         }
 
@@ -81,6 +93,7 @@ struct MarkupTextEditor: NSViewRepresentable {
         textView.importsGraphics = false
         textView.allowsUndo = true
         textView.usesFindPanel = true
+        textView.usesFindBar = true
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isAutomaticDashSubstitutionEnabled = false
         textView.isAutomaticTextReplacementEnabled = false
@@ -444,6 +457,12 @@ private extension NSEvent {
             return isReturn && normalized == [.command]
         case "command-shift-return":
             return isReturn && normalized == [.command, .shift]
+        case "command-e":
+            return key == "e" && normalized == [.command]
+        case "command-shift-e":
+            return key == "e" && normalized == [.command, .shift]
+        case "command-option-e":
+            return key == "e" && normalized == [.command, .option]
         case "command-r":
             return key == "r" && normalized == [.command]
         case "command-shift-r":

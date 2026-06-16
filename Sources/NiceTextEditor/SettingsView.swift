@@ -6,8 +6,8 @@ struct SettingsView: View {
     @AppStorage("editorFontSize") private var editorFontSize = 15.0
     @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
-    @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-r"
-    @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-r"
+    @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
+    @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
 
     var body: some View {
         Form {
@@ -76,6 +76,30 @@ struct SettingsView: View {
         }
         .padding(20)
         .frame(width: 560)
+        .onAppear {
+            migrateWorksheetShortcutDefaults()
+        }
+    }
+
+    private func migrateWorksheetShortcutDefaults() {
+        if replaceSelectionWithPipelineShortcut == "command-r" {
+            replaceSelectionWithPipelineShortcut = "command-e"
+        }
+        if replaceSelectionWithPipelineShortcut == "command-shift-r" {
+            replaceSelectionWithPipelineShortcut = "command-shift-e"
+        }
+        if replaceSelectionWithPipelineShortcut == "command-option-r" {
+            replaceSelectionWithPipelineShortcut = "command-option-e"
+        }
+        if insertPipelineAfterSelectionShortcut == "command-r" {
+            insertPipelineAfterSelectionShortcut = "command-e"
+        }
+        if insertPipelineAfterSelectionShortcut == "command-shift-r" {
+            insertPipelineAfterSelectionShortcut = "command-shift-e"
+        }
+        if insertPipelineAfterSelectionShortcut == "command-option-r" {
+            insertPipelineAfterSelectionShortcut = "command-option-e"
+        }
     }
 
     private func openWorksheetStartupFolder() {
@@ -123,8 +147,8 @@ private struct ShortcutChoices: View {
         Text("Shift Return").tag("shift-return")
         Text("Command Return").tag("command-return")
         Text("Command Shift Return").tag("command-shift-return")
-        Text("Command R").tag("command-r")
-        Text("Command Shift R").tag("command-shift-r")
-        Text("Command Option R").tag("command-option-r")
+        Text("Command E").tag("command-e")
+        Text("Command Shift E").tag("command-shift-e")
+        Text("Command Option E").tag("command-option-e")
     }
 }

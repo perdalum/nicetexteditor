@@ -20,8 +20,8 @@ struct ContentView: View {
     @AppStorage("editorFontSize") private var editorFontSize = 15.0
     @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
-    @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-r"
-    @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-r"
+    @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
+    @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
 
     @StateObject private var worksheetShell = WorksheetShell()
 
@@ -75,6 +75,9 @@ struct ContentView: View {
             .background(.bar)
         }
         .navigationTitle(displayName)
+        .onAppear {
+            migrateWorksheetShortcutDefaults()
+        }
         .focusedSceneValue(\.resetWorksheetShell) {
             resetWorksheetShell()
         }
@@ -116,6 +119,27 @@ struct ContentView: View {
 
     private func resetTextSize() {
         editorFontSize = 15
+    }
+
+    private func migrateWorksheetShortcutDefaults() {
+        if replaceSelectionWithPipelineShortcut == "command-r" {
+            replaceSelectionWithPipelineShortcut = "command-e"
+        }
+        if replaceSelectionWithPipelineShortcut == "command-shift-r" {
+            replaceSelectionWithPipelineShortcut = "command-shift-e"
+        }
+        if replaceSelectionWithPipelineShortcut == "command-option-r" {
+            replaceSelectionWithPipelineShortcut = "command-option-e"
+        }
+        if insertPipelineAfterSelectionShortcut == "command-r" {
+            insertPipelineAfterSelectionShortcut = "command-e"
+        }
+        if insertPipelineAfterSelectionShortcut == "command-shift-r" {
+            insertPipelineAfterSelectionShortcut = "command-shift-e"
+        }
+        if insertPipelineAfterSelectionShortcut == "command-option-r" {
+            insertPipelineAfterSelectionShortcut = "command-option-e"
+        }
     }
 
     @MainActor

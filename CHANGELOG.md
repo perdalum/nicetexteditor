@@ -24,3 +24,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Worksheet menu command for resetting the active document shell.
 - Application Support `WorksheetStartup.zsh` file for worksheet shell PATH, zsh functions, aliases, exports, and options.
 - Settings button to reveal the worksheet startup file in Finder.
+- Standard macOS find commands with Command-F, Command-G, and Shift-Command-G.
+- Worksheet menu entries for running a selection, replacing a selection with pipeline output, and inserting pipeline output after the selection.
+- Worksheet filter shortcuts moved to Command-E and Command-Shift-E.
