@@ -6,7 +6,7 @@ struct NiceTextEditorApp: App {
     var body: some Scene {
         DocumentGroup(newDocument: PlainTextDocument()) { file in
             ContentView(document: file.$document, fileURL: file.fileURL)
-                .frame(minWidth: 720, minHeight: 480)
+                .frame(minWidth: 360, minHeight: 300)
         }
         .commands {
             CommandGroup(after: .pasteboard) {

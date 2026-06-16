@@ -22,6 +22,46 @@ struct ContentView: View {
         fileURL?.path ?? "New document"
     }
 
+    private var characterCountText: String {
+        "\(document.text.count) characters"
+    }
+
+    private var fullStatusBar: some View {
+        HStack(spacing: 12) {
+            documentLabel
+            Text(locationDescription)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 8)
+            Text(characterCountText)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var compactStatusBar: some View {
+        HStack(spacing: 8) {
+            documentLabel
+            Spacer(minLength: 8)
+            Text(characterCountText)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var minimalStatusBar: some View {
+        HStack(spacing: 0) {
+            documentLabel
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var documentLabel: some View {
+        Label(displayName, systemImage: "doc.text")
+            .labelStyle(.titleAndIcon)
+            .lineLimit(1)
+            .truncationMode(.middle)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             MarkupTextEditor(
@@ -59,16 +99,10 @@ struct ContentView: View {
 
             Divider()
 
-            HStack(spacing: 12) {
-                Label(displayName, systemImage: "doc.text")
-                    .labelStyle(.titleAndIcon)
-                Text(locationDescription)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                Spacer()
-                Text("\(document.text.count) characters")
-                    .foregroundStyle(.secondary)
+            ViewThatFits(in: .horizontal) {
+                fullStatusBar
+                compactStatusBar
+                minimalStatusBar
             }
             .font(.caption)
             .padding(.horizontal, 12)

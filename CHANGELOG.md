@@ -31,3 +31,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Worksheet filter shortcuts moved to Command-E and Command-Shift-E.
 - Worksheet pipeline prompts now focus the command field and support global Up/Down Arrow command history.
 - Visual-only bottom scroll space so the last line can be scrolled above the bottom of the editor without changing file contents.
+- Lower minimum document window size with an adaptive status bar for narrow windows.
