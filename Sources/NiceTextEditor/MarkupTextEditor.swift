@@ -135,11 +135,13 @@ struct MarkupTextEditor: NSViewRepresentable {
         context.coordinator.configureShortcuts(for: textView)
 
         context.coordinator.configureTextWidth(for: textView)
+        context.coordinator.configureVirtualBottomSpace(for: textView)
         context.coordinator.applyMarkupStyles(to: textView)
         DispatchQueue.main.async { [weak coordinator = context.coordinator, weak textView] in
             guard let textView else { return }
             coordinator?.startObservingWindow(for: textView)
             coordinator?.configureTextWidth(for: textView)
+            coordinator?.configureVirtualBottomSpace(for: textView)
         }
         return scrollView
     }
@@ -159,6 +161,7 @@ struct MarkupTextEditor: NSViewRepresentable {
         context.coordinator.startObservingWindow(for: textView)
         context.coordinator.configureShortcuts(for: textView)
         context.coordinator.configureTextWidth(for: textView)
+        context.coordinator.configureVirtualBottomSpace(for: textView)
         context.coordinator.applyMarkupStyles(to: textView)
     }
 
@@ -249,6 +252,42 @@ struct MarkupTextEditor: NSViewRepresentable {
             textView.needsDisplay = true
         }
 
+        func configureVirtualBottomSpace(for textView: NSTextView) {
+            guard let scrollView = textView.enclosingScrollView,
+                  let layoutManager = textView.layoutManager,
+                  let textContainer = textView.textContainer else { return }
+
+            let viewportHeight = scrollView.contentView.bounds.height
+            guard viewportHeight > 0 else { return }
+
+            // Do not use NSScrollView.contentInsets for the virtual space. AppKit treats
+            // contentInsets as obscured viewport area and will auto-scroll the insertion
+            // point above that inset while typing. Instead, make the document view taller
+            // than its laid-out text, which creates scrollable blank space without changing
+            // the visible rect used for normal editing.
+            if scrollView.contentInsets.bottom != 0 {
+                scrollView.contentInsets = NSEdgeInsets(
+                    top: scrollView.contentInsets.top,
+                    left: scrollView.contentInsets.left,
+                    bottom: 0,
+                    right: scrollView.contentInsets.right
+                )
+            }
+
+            layoutManager.ensureLayout(for: textContainer)
+            let textHeight = layoutManager.usedRect(for: textContainer).height + (textView.textContainerInset.height * 2)
+            let bottomSpace = viewportHeight * 0.75
+            let desiredHeight = max(viewportHeight, ceil(textHeight + bottomSpace))
+            let currentSize = textView.frame.size
+            guard abs(currentSize.height - desiredHeight) > 0.5 else { return }
+
+            let visibleOrigin = scrollView.contentView.bounds.origin
+            textView.minSize = NSSize(width: 0, height: desiredHeight)
+            textView.setFrameSize(NSSize(width: currentSize.width, height: desiredHeight))
+            scrollView.contentView.setBoundsOrigin(visibleOrigin)
+            scrollView.reflectScrolledClipView(scrollView.contentView)
+        }
+
         private func startObservingLayout(for textView: NSTextView) {
             guard let clipView = textView.enclosingScrollView?.contentView else { return }
             guard clipView !== observedClipView || textView !== observedTextView else { return }
@@ -274,16 +313,19 @@ struct MarkupTextEditor: NSViewRepresentable {
 
         private func scheduleTextWidthConfiguration(for textView: NSTextView) {
             configureTextWidth(for: textView)
+            configureVirtualBottomSpace(for: textView)
 
             // Full-screen Space transitions can report a transient stale content width.
             // Recheck once the window has become visible and AppKit has completed layout.
             DispatchQueue.main.async { [weak self, weak textView] in
                 guard let textView else { return }
                 self?.configureTextWidth(for: textView)
+                self?.configureVirtualBottomSpace(for: textView)
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self, weak textView] in
                 guard let textView else { return }
                 self?.configureTextWidth(for: textView)
+                self?.configureVirtualBottomSpace(for: textView)
             }
         }
 

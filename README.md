@@ -12,6 +12,7 @@ NiceTextEditor is a small macOS plain-text editor modelled after TextEdit. It is
 - Lets you configure the full-screen text width as a percentage of the screen width.
 - Provides an MPW/BBEdit-style UNIX worksheet: each document owns a background `/bin/zsh` process, selected commands can be run in-place, and selected text can be filtered through a prompted pipeline.
 - Supports standard macOS find commands: Command-F to search and Command-G / Shift-Command-G to move between matches with wrapping.
+- Adds visual-only scroll space below the text so the final line can be positioned about one quarter down from the top of the editor.
 - Keeps files as plain text while rendering selected markup regions differently.
 - Shows nroff-style verbatim blocks in SF Mono:
 
