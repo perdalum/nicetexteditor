@@ -2,6 +2,8 @@
 
 NiceTextEditor is a small macOS plain-text editor modelled after TextEdit. It is built with SwiftUI and AppKit’s modern `NSTextView` editing widget.
 
+![This README.md open in NiceTextEditor](nicetexteditor.png)
+
 ## Features
 
 - Opens and saves plain-text files.
