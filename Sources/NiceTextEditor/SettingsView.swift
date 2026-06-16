@@ -3,7 +3,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("proportionalFontName") private var proportionalFontName = "SF Pro"
-    @AppStorage("editorFontSize") private var editorFontSize = 15.0
     @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
@@ -25,9 +24,6 @@ struct SettingsView: View {
                     .textFieldStyle(.roundedBorder)
                     .help("Enter any installed PostScript font name or family name. SF Pro uses the macOS system font.")
 
-                Stepper(value: $editorFontSize, in: 9...36, step: 1) {
-                    Text("Size: \(Int(editorFontSize)) pt")
-                }
             }
 
             Section("Full Screen") {

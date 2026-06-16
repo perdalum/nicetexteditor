@@ -1,24 +1,13 @@
 import AppKit
 import SwiftUI
 
-private struct ResetWorksheetShellFocusedValueKey: FocusedValueKey {
-    typealias Value = @MainActor () -> Void
-}
-
-extension FocusedValues {
-    var resetWorksheetShell: (@MainActor () -> Void)? {
-        get { self[ResetWorksheetShellFocusedValueKey.self] }
-        set { self[ResetWorksheetShellFocusedValueKey.self] = newValue }
-    }
-}
-
 struct ContentView: View {
     @Binding var document: PlainTextDocument
     let fileURL: URL?
 
     @AppStorage("proportionalFontName") private var proportionalFontName = "SF Pro"
-    @AppStorage("editorFontSize") private var editorFontSize = 15.0
     @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
+    @State private var editorFontSize = 15.0
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
     @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
@@ -53,6 +42,18 @@ struct ContentView: View {
                 insertPipelineAfterSelection: { selectedText in
                     guard let command = promptForPipelineCommand(title: "Insert Command Output After Selection") else { return nil }
                     return try await worksheetShell.runPipeline(command, stdin: selectedText)
+                },
+                resetDocumentShell: {
+                    resetWorksheetShell()
+                },
+                increaseTextSize: {
+                    increaseTextSize()
+                },
+                decreaseTextSize: {
+                    decreaseTextSize()
+                },
+                resetTextSize: {
+                    resetTextSize()
                 }
             )
 
@@ -77,9 +78,6 @@ struct ContentView: View {
         .navigationTitle(displayName)
         .onAppear {
             migrateWorksheetShortcutDefaults()
-        }
-        .focusedSceneValue(\.resetWorksheetShell) {
-            resetWorksheetShell()
         }
         .toolbar {
             ToolbarItemGroup {
@@ -160,13 +158,33 @@ struct ContentView: View {
         alert.addButton(withTitle: "Run")
         alert.addButton(withTitle: "Cancel")
 
-        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 24))
+        let textField = FocusedWorksheetCommandField(frame: NSRect(x: 0, y: 0, width: 420, height: 24))
         textField.placeholderString = "sed 's/_/ /g' | wc -w"
+        let historyDelegate = WorksheetCommandHistoryFieldDelegate(history: worksheetCommandHistory())
+        textField.delegate = historyDelegate
         alert.accessoryView = textField
+        alert.layout()
+        alert.window.initialFirstResponder = textField
+        alert.window.makeFirstResponder(textField)
 
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
         let command = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        return command.isEmpty ? nil : command
+        guard !command.isEmpty else { return nil }
+        saveWorksheetCommandToHistory(command)
+        return command
+    }
+
+    private func worksheetCommandHistory() -> [String] {
+        UserDefaults.standard.stringArray(forKey: worksheetCommandHistoryKey) ?? []
+    }
+
+    private func saveWorksheetCommandToHistory(_ command: String) {
+        var history = worksheetCommandHistory().filter { $0 != command }
+        history.append(command)
+        if history.count > 100 {
+            history.removeFirst(history.count - 100)
+        }
+        UserDefaults.standard.set(history, forKey: worksheetCommandHistoryKey)
     }
 
     @MainActor
@@ -174,6 +192,71 @@ struct ContentView: View {
         let alert = NSAlert(error: error)
         alert.messageText = message
         alert.runModal()
+    }
+}
+
+private let worksheetCommandHistoryKey = "worksheetPipelineCommandHistory"
+
+private final class FocusedWorksheetCommandField: NSTextField {
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            window?.makeFirstResponder(self)
+            currentEditor()?.selectedRange = NSRange(location: (stringValue as NSString).length, length: 0)
+        }
+    }
+}
+
+private final class WorksheetCommandHistoryFieldDelegate: NSObject, NSTextFieldDelegate {
+    private let history: [String]
+    private var navigationIndex: Int
+    private var draft = ""
+
+    init(history: [String]) {
+        self.history = history
+        self.navigationIndex = history.count
+    }
+
+    func control(
+        _ control: NSControl,
+        textView: NSTextView,
+        doCommandBy commandSelector: Selector
+    ) -> Bool {
+        switch commandSelector {
+        case #selector(NSResponder.moveUp(_:)):
+            showPreviousCommand(in: textView)
+            return true
+        case #selector(NSResponder.moveDown(_:)):
+            showNextCommand(in: textView)
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func showPreviousCommand(in textView: NSTextView) {
+        guard !history.isEmpty else { return }
+        if navigationIndex == history.count {
+            draft = textView.string
+        }
+        navigationIndex = max(0, navigationIndex - 1)
+        replaceText(in: textView, with: history[navigationIndex])
+    }
+
+    private func showNextCommand(in textView: NSTextView) {
+        guard !history.isEmpty else { return }
+        navigationIndex = min(history.count, navigationIndex + 1)
+        if navigationIndex == history.count {
+            replaceText(in: textView, with: draft)
+        } else {
+            replaceText(in: textView, with: history[navigationIndex])
+        }
+    }
+
+    private func replaceText(in textView: NSTextView, with string: String) {
+        textView.string = string
+        textView.setSelectedRange(NSRange(location: (string as NSString).length, length: 0))
     }
 }
 

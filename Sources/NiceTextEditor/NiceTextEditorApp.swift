@@ -3,8 +3,6 @@ import SwiftUI
 
 @main
 struct NiceTextEditorApp: App {
-    @AppStorage("editorFontSize") private var editorFontSize = 15.0
-
     var body: some Scene {
         DocumentGroup(newDocument: PlainTextDocument()) { file in
             ContentView(document: file.$document, fileURL: file.fileURL)
@@ -24,11 +22,11 @@ struct NiceTextEditorApp: App {
 
             CommandGroup(after: .textFormatting) {
                 Divider()
-                Button("Increase Text Size") { increaseTextSize() }
+                Button("Increase Text Size") { AppCommands.perform("increaseEditorTextSize:") }
                     .keyboardShortcut("+", modifiers: [.command])
-                Button("Decrease Text Size") { decreaseTextSize() }
+                Button("Decrease Text Size") { AppCommands.perform("decreaseEditorTextSize:") }
                     .keyboardShortcut("-", modifiers: [.command])
-                Button("Actual Size") { resetTextSize() }
+                Button("Actual Size") { AppCommands.perform("resetEditorTextSize:") }
                     .keyboardShortcut("0", modifiers: [.command])
             }
 
@@ -40,16 +38,11 @@ struct NiceTextEditorApp: App {
         }
     }
 
-    private func increaseTextSize() {
-        editorFontSize = min(36, editorFontSize + 1)
-    }
+}
 
-    private func decreaseTextSize() {
-        editorFontSize = max(9, editorFontSize - 1)
-    }
-
-    private func resetTextSize() {
-        editorFontSize = 15
+private enum AppCommands {
+    static func perform(_ selectorName: String) {
+        NSApp.sendAction(NSSelectorFromString(selectorName), to: nil, from: nil)
     }
 }
 
@@ -62,35 +55,28 @@ private enum FindCommands {
 }
 
 private struct WorksheetCommands: Commands {
-    @FocusedValue(\.resetWorksheetShell) private var resetWorksheetShell
-
     var body: some Commands {
         CommandMenu("Worksheet") {
             Button("Run Selection in Shell") {
-                WorksheetCommands.perform("runSelectionInShell:")
+                AppCommands.perform("runSelectionInShell:")
             }
             .keyboardShortcut(.return, modifiers: [.shift])
 
             Button("Replace Selection with Pipeline Output…") {
-                WorksheetCommands.perform("replaceSelectionWithPipeline:")
+                AppCommands.perform("replaceSelectionWithPipeline:")
             }
             .keyboardShortcut("e", modifiers: [.command])
 
             Button("Insert Pipeline Output After Selection…") {
-                WorksheetCommands.perform("insertPipelineAfterSelection:")
+                AppCommands.perform("insertPipelineAfterSelection:")
             }
             .keyboardShortcut("e", modifiers: [.command, .shift])
 
             Divider()
 
             Button("Reset Document Shell") {
-                resetWorksheetShell?()
+                AppCommands.perform("resetDocumentShell:")
             }
-            .disabled(resetWorksheetShell == nil)
         }
-    }
-
-    private static func perform(_ selectorName: String) {
-        NSApp.sendAction(NSSelectorFromString(selectorName), to: nil, from: nil)
     }
 }

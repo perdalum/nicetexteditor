@@ -5,6 +5,10 @@ private enum WorksheetEditorCommand {
     case executeSelection
     case replaceSelectionWithPipeline
     case insertPipelineAfterSelection
+    case resetDocumentShell
+    case increaseTextSize
+    case decreaseTextSize
+    case resetTextSize
 }
 
 private protocol WorksheetTextViewDelegate: AnyObject {
@@ -39,6 +43,22 @@ private final class WorksheetTextView: NSTextView {
         worksheetCommandDelegate?.worksheetTextView(self, didRequest: .insertPipelineAfterSelection)
     }
 
+    @objc func resetDocumentShell(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .resetDocumentShell)
+    }
+
+    @objc func increaseEditorTextSize(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .increaseTextSize)
+    }
+
+    @objc func decreaseEditorTextSize(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .decreaseTextSize)
+    }
+
+    @objc func resetEditorTextSize(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .resetTextSize)
+    }
+
     private func handleWorksheetShortcut(_ event: NSEvent) -> Bool {
         if event.matchesShortcut(executeSelectionShortcut) {
             runSelectionInShell(nil)
@@ -70,6 +90,10 @@ struct MarkupTextEditor: NSViewRepresentable {
     let executeSelection: @MainActor (String) async throws -> String
     let replaceSelectionWithPipeline: @MainActor (String) async throws -> String?
     let insertPipelineAfterSelection: @MainActor (String) async throws -> String?
+    let resetDocumentShell: @MainActor () -> Void
+    let increaseTextSize: @MainActor () -> Void
+    let decreaseTextSize: @MainActor () -> Void
+    let resetTextSize: @MainActor () -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -294,6 +318,23 @@ struct MarkupTextEditor: NSViewRepresentable {
         }
 
         fileprivate func worksheetTextView(_ textView: WorksheetTextView, didRequest command: WorksheetEditorCommand) {
+            switch command {
+            case .resetDocumentShell:
+                Task { @MainActor in parent.resetDocumentShell() }
+                return
+            case .increaseTextSize:
+                Task { @MainActor in parent.increaseTextSize() }
+                return
+            case .decreaseTextSize:
+                Task { @MainActor in parent.decreaseTextSize() }
+                return
+            case .resetTextSize:
+                Task { @MainActor in parent.resetTextSize() }
+                return
+            case .executeSelection, .replaceSelectionWithPipeline, .insertPipelineAfterSelection:
+                break
+            }
+
             let selectedRange = textView.selectedRange()
             guard selectedRange.length > 0 else {
                 NSSound.beep()
@@ -315,6 +356,8 @@ struct MarkupTextEditor: NSViewRepresentable {
                     case .insertPipelineAfterSelection:
                         guard let output = try await parent.insertPipelineAfterSelection(selectedText) else { return }
                         insert(output, after: selectedRange, selectedText: selectedText, in: textView)
+                    case .resetDocumentShell, .increaseTextSize, .decreaseTextSize, .resetTextSize:
+                        return
                     }
                 } catch {
                     present(error: error, in: textView.window)

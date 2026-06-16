@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Initial SwiftUI macOS plain-text editor application.
 - TextEdit-like editing surface backed by AppKit `NSTextView`.
 - Open, new, save, and save-as support for plain-text files.
-- Configurable proportional editor font and font size.
+- Configurable proportional editor font and per-window editor text size.
 - Default proportional rendering using the macOS system font, SF Pro.
 - Nroff-like `.VB` / `.VE` verbatim block rendering using SF Mono while preserving the original plain text.
 - Settings window for editor font configuration.
@@ -25,5 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Application Support `WorksheetStartup.zsh` file for worksheet shell PATH, zsh functions, aliases, exports, and options.
 - Settings button to reveal the worksheet startup file in Finder.
 - Standard macOS find commands with Command-F, Command-G, and Shift-Command-G.
+- Per-window editor text size, with text-size menu commands routed through the active editor responder.
+- Worksheet shell reset routed through the active editor responder to avoid interfering with system Window menu actions.
 - Worksheet menu entries for running a selection, replacing a selection with pipeline output, and inserting pipeline output after the selection.
 - Worksheet filter shortcuts moved to Command-E and Command-Shift-E.
+- Worksheet pipeline prompts now focus the command field and support global Up/Down Arrow command history.
