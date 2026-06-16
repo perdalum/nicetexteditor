@@ -1,4 +1,16 @@
+import AppKit
 import SwiftUI
+
+private struct ResetWorksheetShellFocusedValueKey: FocusedValueKey {
+    typealias Value = @MainActor () -> Void
+}
+
+extension FocusedValues {
+    var resetWorksheetShell: (@MainActor () -> Void)? {
+        get { self[ResetWorksheetShellFocusedValueKey.self] }
+        set { self[ResetWorksheetShellFocusedValueKey.self] = newValue }
+    }
+}
 
 struct ContentView: View {
     @Binding var document: PlainTextDocument
@@ -7,6 +19,11 @@ struct ContentView: View {
     @AppStorage("proportionalFontName") private var proportionalFontName = "SF Pro"
     @AppStorage("editorFontSize") private var editorFontSize = 15.0
     @AppStorage("fullScreenTextWidthPercent") private var fullScreenTextWidthPercent = 70.0
+    @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
+    @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-r"
+    @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-r"
+
+    @StateObject private var worksheetShell = WorksheetShell()
 
     private var displayName: String {
         fileURL?.lastPathComponent ?? "Untitled"
@@ -22,7 +39,21 @@ struct ContentView: View {
                 text: $document.text,
                 proportionalFontName: proportionalFontName,
                 fontSize: editorFontSize,
-                fullScreenTextWidthPercent: fullScreenTextWidthPercent
+                fullScreenTextWidthPercent: fullScreenTextWidthPercent,
+                executeSelectionShortcut: executeSelectionShortcut,
+                replaceSelectionWithPipelineShortcut: replaceSelectionWithPipelineShortcut,
+                insertPipelineAfterSelectionShortcut: insertPipelineAfterSelectionShortcut,
+                executeSelection: { selectedText in
+                    try await worksheetShell.execute(selectedText)
+                },
+                replaceSelectionWithPipeline: { selectedText in
+                    guard let command = promptForPipelineCommand(title: "Replace Selection with Command Output") else { return nil }
+                    return try await worksheetShell.runPipeline(command, stdin: selectedText)
+                },
+                insertPipelineAfterSelection: { selectedText in
+                    guard let command = promptForPipelineCommand(title: "Insert Command Output After Selection") else { return nil }
+                    return try await worksheetShell.runPipeline(command, stdin: selectedText)
+                }
             )
 
             Divider()
@@ -44,6 +75,9 @@ struct ContentView: View {
             .background(.bar)
         }
         .navigationTitle(displayName)
+        .focusedSceneValue(\.resetWorksheetShell) {
+            resetWorksheetShell()
+        }
         .toolbar {
             ToolbarItemGroup {
                 Menu {
@@ -82,6 +116,40 @@ struct ContentView: View {
 
     private func resetTextSize() {
         editorFontSize = 15
+    }
+
+    @MainActor
+    private func resetWorksheetShell() {
+        do {
+            try worksheetShell.reset()
+        } catch {
+            present(error: error, message: "Could not reset the worksheet shell.")
+        }
+    }
+
+    @MainActor
+    private func promptForPipelineCommand(title: String) -> String? {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = "Enter a zsh command or pipeline. The selected text is sent to the command as standard input."
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Run")
+        alert.addButton(withTitle: "Cancel")
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 420, height: 24))
+        textField.placeholderString = "sed 's/_/ /g' | wc -w"
+        alert.accessoryView = textField
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        let command = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return command.isEmpty ? nil : command
+    }
+
+    @MainActor
+    private func present(error: Error, message: String) {
+        let alert = NSAlert(error: error)
+        alert.messageText = message
+        alert.runModal()
     }
 }
 

@@ -19,3 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Plain-text document type metadata in `Info.plist`.
 - Configurable full-screen text width as a percentage of screen width.
 - Native Xcode project with a shared `NiceTextEditor` scheme.
+- MPW/BBEdit-style UNIX worksheet support with one background `/bin/zsh` process per document.
+- Configurable worksheet shortcuts for running a selection, replacing a selection with pipeline output, and inserting pipeline output after a selection.
+- Worksheet menu command for resetting the active document shell.
+- Application Support `WorksheetStartup.zsh` file for worksheet shell PATH, zsh functions, aliases, exports, and options.
+- Settings button to reveal the worksheet startup file in Finder.

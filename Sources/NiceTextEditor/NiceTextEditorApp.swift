@@ -19,6 +19,8 @@ struct NiceTextEditorApp: App {
                 Button("Actual Size") { resetTextSize() }
                     .keyboardShortcut("0", modifiers: [.command])
             }
+
+            WorksheetCommands()
         }
 
         Settings {
@@ -36,5 +38,18 @@ struct NiceTextEditorApp: App {
 
     private func resetTextSize() {
         editorFontSize = 15
+    }
+}
+
+private struct WorksheetCommands: Commands {
+    @FocusedValue(\.resetWorksheetShell) private var resetWorksheetShell
+
+    var body: some Commands {
+        CommandMenu("Worksheet") {
+            Button("Reset Document Shell") {
+                resetWorksheetShell?()
+            }
+            .disabled(resetWorksheetShell == nil)
+        }
     }
 }

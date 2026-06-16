@@ -1,29 +1,81 @@
 import AppKit
 import SwiftUI
 
+private enum WorksheetEditorCommand {
+    case executeSelection
+    case replaceSelectionWithPipeline
+    case insertPipelineAfterSelection
+}
+
+private protocol WorksheetTextViewDelegate: AnyObject {
+    func worksheetTextView(_ textView: WorksheetTextView, didRequest command: WorksheetEditorCommand)
+}
+
+private final class WorksheetTextView: NSTextView {
+    weak var worksheetCommandDelegate: WorksheetTextViewDelegate?
+    var executeSelectionShortcut = "shift-return"
+    var replaceSelectionWithPipelineShortcut = "command-r"
+    var insertPipelineAfterSelectionShortcut = "command-shift-r"
+
+    override func keyDown(with event: NSEvent) {
+        if handleWorksheetShortcut(event) { return }
+        super.keyDown(with: event)
+    }
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if handleWorksheetShortcut(event) { return true }
+        return super.performKeyEquivalent(with: event)
+    }
+
+    private func handleWorksheetShortcut(_ event: NSEvent) -> Bool {
+        if event.matchesShortcut(executeSelectionShortcut) {
+            worksheetCommandDelegate?.worksheetTextView(self, didRequest: .executeSelection)
+            return true
+        }
+
+        if event.matchesShortcut(replaceSelectionWithPipelineShortcut) {
+            worksheetCommandDelegate?.worksheetTextView(self, didRequest: .replaceSelectionWithPipeline)
+            return true
+        }
+
+        if event.matchesShortcut(insertPipelineAfterSelectionShortcut) {
+            worksheetCommandDelegate?.worksheetTextView(self, didRequest: .insertPipelineAfterSelection)
+            return true
+        }
+
+        return false
+    }
+}
+
 struct MarkupTextEditor: NSViewRepresentable {
     @Binding var text: String
     let proportionalFontName: String
     let fontSize: Double
     let fullScreenTextWidthPercent: Double
+    let executeSelectionShortcut: String
+    let replaceSelectionWithPipelineShortcut: String
+    let insertPipelineAfterSelectionShortcut: String
+    let executeSelection: @MainActor (String) async throws -> String
+    let replaceSelectionWithPipeline: @MainActor (String) async throws -> String?
+    let insertPipelineAfterSelection: @MainActor (String) async throws -> String?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
 
     func makeNSView(context: Context) -> NSScrollView {
-        let scrollView = NSTextView.scrollableTextView()
+        let scrollView = NSScrollView()
+        let textView = WorksheetTextView()
+
         scrollView.drawsBackground = true
         scrollView.backgroundColor = .textBackgroundColor
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = false
-
-        guard let textView = scrollView.documentView as? NSTextView else {
-            return scrollView
-        }
+        scrollView.documentView = textView
 
         textView.delegate = context.coordinator
+        textView.worksheetCommandDelegate = context.coordinator
         textView.string = text
         textView.isRichText = false
         textView.importsGraphics = false
@@ -43,6 +95,7 @@ struct MarkupTextEditor: NSViewRepresentable {
         textView.textContainer?.containerSize = NSSize(width: scrollView.contentSize.width, height: CGFloat.greatestFiniteMagnitude)
         textView.textContainerInset = NSSize(width: 12, height: 12)
         textView.selectedTextAttributes = [.backgroundColor: NSColor.selectedTextBackgroundColor]
+        context.coordinator.configureShortcuts(for: textView)
 
         context.coordinator.configureTextWidth(for: textView)
         context.coordinator.applyMarkupStyles(to: textView)
@@ -67,11 +120,12 @@ struct MarkupTextEditor: NSViewRepresentable {
         }
 
         context.coordinator.startObservingWindow(for: textView)
+        context.coordinator.configureShortcuts(for: textView)
         context.coordinator.configureTextWidth(for: textView)
         context.coordinator.applyMarkupStyles(to: textView)
     }
 
-    final class Coordinator: NSObject, NSTextViewDelegate {
+    final class Coordinator: NSObject, NSTextViewDelegate, WorksheetTextViewDelegate {
         var parent: MarkupTextEditor
         var isApplyingProgrammaticChange = false
         private weak var observedWindow: NSWindow?
@@ -85,6 +139,13 @@ struct MarkupTextEditor: NSViewRepresentable {
 
         deinit {
             stopObservingWindow()
+        }
+
+        func configureShortcuts(for textView: NSTextView) {
+            guard let textView = textView as? WorksheetTextView else { return }
+            textView.executeSelectionShortcut = parent.executeSelectionShortcut
+            textView.replaceSelectionWithPipelineShortcut = parent.replaceSelectionWithPipelineShortcut
+            textView.insertPipelineAfterSelectionShortcut = parent.insertPipelineAfterSelectionShortcut
         }
 
         func startObservingWindow(for textView: NSTextView) {
@@ -219,6 +280,64 @@ struct MarkupTextEditor: NSViewRepresentable {
             return (false, targetTextWidth, horizontalInset)
         }
 
+        fileprivate func worksheetTextView(_ textView: WorksheetTextView, didRequest command: WorksheetEditorCommand) {
+            let selectedRange = textView.selectedRange()
+            guard selectedRange.length > 0 else {
+                NSSound.beep()
+                return
+            }
+
+            let nsString = textView.string as NSString
+            let selectedText = nsString.substring(with: selectedRange)
+
+            Task { @MainActor in
+                do {
+                    switch command {
+                    case .executeSelection:
+                        let output = try await parent.executeSelection(selectedText)
+                        insert(output, after: selectedRange, selectedText: selectedText, in: textView)
+                    case .replaceSelectionWithPipeline:
+                        guard let output = try await parent.replaceSelectionWithPipeline(selectedText) else { return }
+                        replace(range: selectedRange, with: output, in: textView)
+                    case .insertPipelineAfterSelection:
+                        guard let output = try await parent.insertPipelineAfterSelection(selectedText) else { return }
+                        insert(output, after: selectedRange, selectedText: selectedText, in: textView)
+                    }
+                } catch {
+                    present(error: error, in: textView.window)
+                }
+            }
+        }
+
+        private func insert(_ output: String, after selectedRange: NSRange, selectedText: String, in textView: NSTextView) {
+            guard !output.isEmpty else { return }
+            let insertion = selectedText.hasSuffix("\n") ? output : "\n" + output
+            let location = Swift.min(selectedRange.location + selectedRange.length, (textView.string as NSString).length)
+            replace(range: NSRange(location: location, length: 0), with: insertion, in: textView)
+        }
+
+        private func replace(range: NSRange, with string: String, in textView: NSTextView) {
+            let textLength = (textView.string as NSString).length
+            let location = Swift.min(range.location, textLength)
+            let length = Swift.min(range.length, textLength - location)
+            let replacementRange = NSRange(location: location, length: length)
+
+            guard textView.shouldChangeText(in: replacementRange, replacementString: string) else { return }
+            textView.textStorage?.replaceCharacters(in: replacementRange, with: string)
+            textView.didChangeText()
+            textView.setSelectedRange(NSRange(location: location + (string as NSString).length, length: 0))
+        }
+
+        private func present(error: Error, in window: NSWindow?) {
+            let alert = NSAlert(error: error)
+            alert.messageText = "Worksheet command failed"
+            if let window {
+                alert.beginSheetModal(for: window)
+            } else {
+                alert.runModal()
+            }
+        }
+
         func textDidChange(_ notification: Notification) {
             guard !isApplyingProgrammaticChange else { return }
             guard let textView = notification.object as? NSTextView else { return }
@@ -308,6 +427,31 @@ struct MarkupTextEditor: NSViewRepresentable {
             }
 
             return ranges
+        }
+    }
+}
+
+private extension NSEvent {
+    func matchesShortcut(_ rawValue: String) -> Bool {
+        let normalized = modifierFlags.intersection([.command, .shift, .option, .control])
+        let key = charactersIgnoringModifiers?.lowercased()
+        let isReturn = keyCode == 36 || keyCode == 76 || key == "\r"
+
+        switch rawValue {
+        case "shift-return":
+            return isReturn && normalized == [.shift]
+        case "command-return":
+            return isReturn && normalized == [.command]
+        case "command-shift-return":
+            return isReturn && normalized == [.command, .shift]
+        case "command-r":
+            return key == "r" && normalized == [.command]
+        case "command-shift-r":
+            return key == "r" && normalized == [.command, .shift]
+        case "command-option-r":
+            return key == "r" && normalized == [.command, .option]
+        default:
+            return false
         }
     }
 }
