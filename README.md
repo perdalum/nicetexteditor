@@ -11,7 +11,7 @@ NiceTextEditor is a small macOS plain-text editor modelled after TextEdit. It is
 - Lets you configure the proportional font in Settings with the standard macOS Font panel.
 - Lets you adjust each document window’s text size independently from toolbar presets or View menu commands.
 - Lets you adjust each document window’s visual tab width from toolbar presets.
-- Lets you choose per-window foreground and background colors from toolbar palettes, including pastel backgrounds and retro Amber/Green text colors with dark-mode variants.
+- Lets you choose per-window foreground and background colors from toolbar palettes, including pastel, Black, and White backgrounds plus retro Amber/Green text colors with dark-mode variants.
 - Lets you configure full-screen text width from the toolbar.
 - Provides an MPW/BBEdit-style UNIX worksheet: each document owns a background `/bin/zsh` process, selected commands can be run in-place, and selected text can be filtered through a prompted pipeline.
 - Supports standard macOS find commands: Command-F to search and Command-G / Shift-Command-G to move between matches with wrapping.
