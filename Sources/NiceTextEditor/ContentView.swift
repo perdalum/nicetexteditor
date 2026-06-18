@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var tabWidth = 4
     @State private var editorBackgroundColor: EditorBackgroundColor = .system
     @State private var editorForegroundColor: EditorForegroundColor = .system
+    @State private var showLineNumbers = false
     @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
     @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
@@ -74,6 +75,7 @@ struct ContentView: View {
                 tabWidth: tabWidth,
                 backgroundColor: editorBackgroundColor.color,
                 foregroundColor: editorForegroundColor.color,
+                showLineNumbers: showLineNumbers,
                 fullScreenTextWidthPercent: fullScreenTextWidthPercent,
                 executeSelectionShortcut: executeSelectionShortcut,
                 replaceSelectionWithPipelineShortcut: replaceSelectionWithPipelineShortcut,
@@ -100,6 +102,9 @@ struct ContentView: View {
                 },
                 resetTextSize: {
                     resetTextSize()
+                },
+                toggleLineNumbers: {
+                    showLineNumbers.toggle()
                 }
             )
 
@@ -123,6 +128,7 @@ struct ContentView: View {
             ToolbarItemGroup {
                 backgroundColorMenu
                 foregroundColorMenu
+                lineNumbersToggle
                 zoomMenu
                 tabWidthMenu
                 fullScreenWidthMenu
@@ -166,6 +172,14 @@ struct ContentView: View {
             Label("Text", systemImage: "textformat")
         }
         .help("Editor text color")
+    }
+
+    private var lineNumbersToggle: some View {
+        Toggle(isOn: $showLineNumbers) {
+            Label("Lines", systemImage: "list.number")
+        }
+        .toggleStyle(.button)
+        .help("Show line numbers")
     }
 
     private var zoomMenu: some View {

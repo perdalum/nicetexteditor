@@ -4,6 +4,13 @@ All notable changes to NiceTextEditor will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic versioning.
 
+## [Unreleased]
+
+### Added
+
+- Go To Line command in the Edit menu with Command-L and support for start/end aliases, clamped line numbers, and negative offsets from the end.
+- Per-window Xcode-style line numbers with a toolbar toggle and View menu command using Command-Shift-L.
+
 ## [1.1.0] - 2026-06-16
 
 ### Added

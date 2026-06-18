@@ -15,6 +15,7 @@
 		A10000000000000000000006 /* WorksheetShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001C /* WorksheetShell.swift */; };
 		A10000000000000000000007 /* EditorColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001D /* EditorColors.swift */; };
 		A10000000000000000000008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001E /* Assets.xcassets */; };
+		A10000000000000000000009 /* LineNumberRulerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000000000000000000001F /* LineNumberRulerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		A1000000000000000000001C /* WorksheetShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorksheetShell.swift; sourceTree = "<group>"; };
 		A1000000000000000000001D /* EditorColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorColors.swift; sourceTree = "<group>"; };
 		A1000000000000000000001E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1000000000000000000001F /* LineNumberRulerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LineNumberRulerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +100,7 @@
 				A10000000000000000000015 /* SettingsView.swift */,
 				A1000000000000000000001C /* WorksheetShell.swift */,
 				A1000000000000000000001D /* EditorColors.swift */,
+				A1000000000000000000001F /* LineNumberRulerView.swift */,
 			);
 			path = NiceTextEditor;
 			sourceTree = "<group>";
@@ -167,6 +170,7 @@
 				A10000000000000000000005 /* SettingsView.swift in Sources */,
 				A10000000000000000000006 /* WorksheetShell.swift in Sources */,
 				A10000000000000000000007 /* EditorColors.swift in Sources */,
+				A10000000000000000000009 /* LineNumberRulerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

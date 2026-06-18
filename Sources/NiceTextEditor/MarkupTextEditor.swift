@@ -9,6 +9,7 @@ private enum WorksheetEditorCommand {
     case increaseTextSize
     case decreaseTextSize
     case resetTextSize
+    case toggleLineNumbers
 }
 
 private protocol WorksheetTextViewDelegate: AnyObject {
@@ -59,6 +60,38 @@ private final class WorksheetTextView: NSTextView {
         worksheetCommandDelegate?.worksheetTextView(self, didRequest: .resetTextSize)
     }
 
+    @objc func toggleLineNumbers(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .toggleLineNumbers)
+    }
+
+    @objc func goToLine(_ sender: Any?) {
+        let lineStarts = lineStartLocations()
+        let lineCount = lineStarts.count
+
+        let alert = NSAlert()
+        alert.messageText = "Go To Line"
+        alert.informativeText = "Enter a line number, start/s, or end/eof/e. Negative numbers count back from the end."
+        alert.addButton(withTitle: "Go")
+        alert.addButton(withTitle: "Cancel")
+
+        let textField = NSTextField(frame: NSRect(x: 0, y: 0, width: 220, height: 24))
+        textField.stringValue = String(currentLineNumber(in: lineStarts))
+        alert.accessoryView = textField
+        alert.window.initialFirstResponder = textField
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        let requestedValue = textField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let targetLine = resolvedLineNumber(from: requestedValue, lineCount: lineCount) else {
+            presentGoToLineError("Could not understand “\(requestedValue)”.")
+            return
+        }
+
+        let targetLocation = lineStarts[targetLine - 1]
+        setSelectedRange(NSRange(location: targetLocation, length: 0))
+        scrollRangeToVisible(NSRange(location: targetLocation, length: 0))
+        window?.makeFirstResponder(self)
+    }
+
     private func handleWorksheetShortcut(_ event: NSEvent) -> Bool {
         if event.matchesShortcut(executeSelectionShortcut) {
             runSelectionInShell(nil)
@@ -77,6 +110,59 @@ private final class WorksheetTextView: NSTextView {
 
         return false
     }
+
+    private func resolvedLineNumber(from value: String, lineCount: Int) -> Int? {
+        let normalized = value.lowercased()
+        if normalized == "start" || normalized == "s" { return 1 }
+        if normalized == "end" || normalized == "eof" || normalized == "e" { return lineCount }
+
+        guard let requestedLine = Int(normalized) else { return nil }
+        if requestedLine <= 0 {
+            if requestedLine == 0 { return 1 }
+            return max(1, min(lineCount, lineCount - abs(requestedLine)))
+        }
+        return max(1, min(lineCount, requestedLine))
+    }
+
+    private func lineStartLocations() -> [Int] {
+        let nsString = string as NSString
+        guard nsString.length > 0 else { return [0] }
+
+        var starts = [0]
+        var searchLocation = 0
+        while searchLocation < nsString.length {
+            var lineEnd = 0
+            nsString.getLineStart(nil, end: &lineEnd, contentsEnd: nil, for: NSRange(location: searchLocation, length: 0))
+
+            if lineEnd < nsString.length {
+                starts.append(lineEnd)
+            } else if lineEnd == nsString.length, lineEnd > 0 {
+                let finalCharacter = nsString.substring(with: NSRange(location: lineEnd - 1, length: 1))
+                if finalCharacter == "\n" || finalCharacter == "\r" {
+                    starts.append(lineEnd)
+                }
+            }
+
+            if lineEnd <= searchLocation { break }
+            searchLocation = lineEnd
+        }
+
+        return starts
+    }
+
+    private func currentLineNumber(in lineStarts: [Int]) -> Int {
+        let location = selectedRange().location
+        return (lineStarts.lastIndex { $0 <= location } ?? 0) + 1
+    }
+
+    private func presentGoToLineError(_ message: String) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "Cannot Go To Line"
+        alert.informativeText = message
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
 }
 
 struct MarkupTextEditor: NSViewRepresentable {
@@ -86,6 +172,7 @@ struct MarkupTextEditor: NSViewRepresentable {
     let tabWidth: Int
     let backgroundColor: NSColor
     let foregroundColor: NSColor
+    let showLineNumbers: Bool
     let fullScreenTextWidthPercent: Double
     let executeSelectionShortcut: String
     let replaceSelectionWithPipelineShortcut: String
@@ -97,6 +184,7 @@ struct MarkupTextEditor: NSViewRepresentable {
     let increaseTextSize: @MainActor () -> Void
     let decreaseTextSize: @MainActor () -> Void
     let resetTextSize: @MainActor () -> Void
+    let toggleLineNumbers: @MainActor () -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -145,12 +233,16 @@ struct MarkupTextEditor: NSViewRepresentable {
 
         context.coordinator.configureTextWidth(for: textView)
         context.coordinator.configureVirtualBottomSpace(for: textView)
+        context.coordinator.configureLineNumbers(for: scrollView, textView: textView)
         context.coordinator.applyMarkupStyles(to: textView)
         DispatchQueue.main.async { [weak coordinator = context.coordinator, weak textView] in
             guard let textView else { return }
             coordinator?.startObservingWindow(for: textView)
             coordinator?.configureTextWidth(for: textView)
             coordinator?.configureVirtualBottomSpace(for: textView)
+            if let scrollView = textView.enclosingScrollView {
+                coordinator?.configureLineNumbers(for: scrollView, textView: textView)
+            }
         }
         return scrollView
     }
@@ -174,6 +266,7 @@ struct MarkupTextEditor: NSViewRepresentable {
         context.coordinator.configureShortcuts(for: textView)
         context.coordinator.configureTextWidth(for: textView)
         context.coordinator.configureVirtualBottomSpace(for: textView)
+        context.coordinator.configureLineNumbers(for: scrollView, textView: textView)
         context.coordinator.applyMarkupStyles(to: textView)
     }
 
@@ -264,6 +357,30 @@ struct MarkupTextEditor: NSViewRepresentable {
             textView.needsDisplay = true
         }
 
+        func configureLineNumbers(for scrollView: NSScrollView, textView: NSTextView) {
+            if parent.showLineNumbers {
+                let rulerView: LineNumberRulerView
+                if let existingRulerView = scrollView.verticalRulerView as? LineNumberRulerView {
+                    rulerView = existingRulerView
+                    rulerView.textView = textView
+                } else {
+                    rulerView = LineNumberRulerView(textView: textView)
+                    scrollView.verticalRulerView = rulerView
+                }
+
+                rulerView.configure(
+                    backgroundColor: parent.backgroundColor,
+                    foregroundColor: parent.foregroundColor,
+                    fontSize: CGFloat(parent.fontSize)
+                )
+                scrollView.hasVerticalRuler = true
+                scrollView.rulersVisible = true
+            } else {
+                scrollView.rulersVisible = false
+                scrollView.hasVerticalRuler = false
+            }
+        }
+
         func configureVirtualBottomSpace(for textView: NSTextView) {
             guard let scrollView = textView.enclosingScrollView,
                   let layoutManager = textView.layoutManager,
@@ -326,6 +443,7 @@ struct MarkupTextEditor: NSViewRepresentable {
         private func scheduleTextWidthConfiguration(for textView: NSTextView) {
             configureTextWidth(for: textView)
             configureVirtualBottomSpace(for: textView)
+            textView.enclosingScrollView?.verticalRulerView?.needsDisplay = true
 
             // Full-screen Space transitions can report a transient stale content width.
             // Recheck once the window has become visible and AppKit has completed layout.
@@ -333,11 +451,13 @@ struct MarkupTextEditor: NSViewRepresentable {
                 guard let textView else { return }
                 self?.configureTextWidth(for: textView)
                 self?.configureVirtualBottomSpace(for: textView)
+                textView.enclosingScrollView?.verticalRulerView?.needsDisplay = true
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self, weak textView] in
                 guard let textView else { return }
                 self?.configureTextWidth(for: textView)
                 self?.configureVirtualBottomSpace(for: textView)
+                textView.enclosingScrollView?.verticalRulerView?.needsDisplay = true
             }
         }
 
@@ -385,6 +505,9 @@ struct MarkupTextEditor: NSViewRepresentable {
             case .resetTextSize:
                 Task { @MainActor in parent.resetTextSize() }
                 return
+            case .toggleLineNumbers:
+                Task { @MainActor in parent.toggleLineNumbers() }
+                return
             case .executeSelection, .replaceSelectionWithPipeline, .insertPipelineAfterSelection:
                 break
             }
@@ -410,7 +533,7 @@ struct MarkupTextEditor: NSViewRepresentable {
                     case .insertPipelineAfterSelection:
                         guard let output = try await parent.insertPipelineAfterSelection(selectedText) else { return }
                         insert(output, after: selectedRange, selectedText: selectedText, in: textView)
-                    case .resetDocumentShell, .increaseTextSize, .decreaseTextSize, .resetTextSize:
+                    case .resetDocumentShell, .increaseTextSize, .decreaseTextSize, .resetTextSize, .toggleLineNumbers:
                         return
                     }
                 } catch {
@@ -492,6 +615,7 @@ struct MarkupTextEditor: NSViewRepresentable {
                 .foregroundColor: parent.foregroundColor,
                 .paragraphStyle: proportionalParagraphStyle
             ]
+            textView.enclosingScrollView?.verticalRulerView?.needsDisplay = true
         }
 
         private func paragraphStyle(for font: NSFont) -> NSMutableParagraphStyle {

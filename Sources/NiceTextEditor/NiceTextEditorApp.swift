@@ -40,6 +40,11 @@ struct NiceTextEditorApp: App {
 
                 Divider()
 
+                Button("Go To Line…") { AppCommands.perform("goToLine:") }
+                    .keyboardShortcut("l", modifiers: [.command])
+
+                Divider()
+
                 Button("Find…") { FindCommands.perform(.showFindInterface) }
                     .keyboardShortcut("f", modifiers: [.command])
                 Button("Find Next") { FindCommands.perform(.nextMatch) }
@@ -51,6 +56,11 @@ struct NiceTextEditorApp: App {
 
             CommandGroup(after: .toolbar) {
                 Divider()
+                Button("Line Numbers") { AppCommands.perform("toggleLineNumbers:") }
+                    .keyboardShortcut("l", modifiers: [.command, .shift])
+
+                Divider()
+
                 Button("Zoom In") { AppCommands.perform("increaseEditorTextSize:") }
                     .keyboardShortcut("+", modifiers: [.command])
                 Button("Zoom Out") { AppCommands.perform("decreaseEditorTextSize:") }
