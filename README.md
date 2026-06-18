@@ -16,6 +16,8 @@ NiceTextEditor is a small macOS plain-text editor modelled after TextEdit. It is
 - Provides an MPW/BBEdit-style UNIX worksheet: each document owns a background `/bin/zsh` process, selected commands can be run in-place, and selected text can be filtered through a prompted pipeline.
 - Includes a custom macOS app icon.
 - Supports standard macOS spelling, grammar, automatic correction, text replacements, smart quotes/dashes, and link/data detection through `NSTextView`, with Edit menu commands for Spelling and Grammar and Substitutions.
+- Supports Go To Line from the Edit menu with Command-L, including start/end aliases and clamped out-of-range line numbers.
+- Lets you toggle per-window Xcode-style line numbers from the toolbar or View menu with Command-Shift-L.
 - Supports standard macOS find commands: Command-F to search and Command-G / Shift-Command-G to move between matches with wrapping.
 - Adds visual-only scroll space below the text so the final line can be positioned about one quarter down from the top of the editor.
 - Supports narrow document windows with an adaptive status bar.
