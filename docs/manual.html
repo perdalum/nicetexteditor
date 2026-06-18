@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NiceTextEditor Manual</title>
+  <link rel="stylesheet" href="css/manual.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-card">
+      <p class="eyebrow">NiceTextEditor Manual</p>
+      <h1>A small plain-text editor with a worksheet soul.</h1>
+      <p class="lede">NiceTextEditor is a native macOS editor for ordinary text files. It keeps documents plain, but gives each window comfortable reading controls, color, line numbers, standard macOS text assistance, and MPW/BBEdit-style shell worksheets.</p>
+      <div class="terminal-strip" aria-hidden="true">
+        <span class="prompt">%</span> echo nice text
+        <span class="output">nice text</span>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <nav class="toc" aria-label="Table of contents">
+      <h2>Contents</h2>
+      <ol>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#documents">Documents and windows</a></li>
+        <li><a href="#toolbar">Toolbar controls</a></li>
+        <li><a href="#editing">Editing text</a></li>
+        <li><a href="#find-go">Find and Go To Line</a></li>
+        <li><a href="#worksheet">UNIX worksheet</a></li>
+        <li><a href="#settings">Settings</a></li>
+        <li><a href="#verbatim">Verbatim blocks</a></li>
+        <li><a href="#shortcuts">Keyboard shortcuts</a></li>
+        <li><a href="#tips">Tips</a></li>
+      </ol>
+    </nav>
+
+    <section id="overview" class="panel">
+      <h2>1. Overview</h2>
+      <p>NiceTextEditor opens and saves regular plain-text files. It is built from SwiftUI document windows with an AppKit <code>NSTextView</code> editing surface, so it feels like a native macOS text editor rather than a web view or custom canvas.</p>
+      <p>The guiding idea is simple: <strong>the file stays plain</strong>. Visual preferences such as zoom, tab width, colors, and line numbers are per-window conveniences. They are not written into the document.</p>
+      <div class="note">
+        <strong>Plain-text promise:</strong> worksheet output can insert text because you asked it to, but editor UI state is not stored in the file.
+      </div>
+    </section>
+
+    <section id="documents" class="panel">
+      <h2>2. Documents and windows</h2>
+      <p>Use the standard macOS document commands to create, open, save, duplicate, rename, and close files. Each open document has its own editor window, status bar, toolbar choices, and worksheet shell process.</p>
+      <ul>
+        <li><strong>New:</strong> creates an untitled plain-text document.</li>
+        <li><strong>Open:</strong> opens existing plain-text files.</li>
+        <li><strong>Save / Save As:</strong> writes normal text content only.</li>
+        <li><strong>Multiple documents:</strong> each window is independent.</li>
+      </ul>
+      <p>The status bar shows the document name, file location when available, and character count. On narrow windows it automatically simplifies itself so the editor remains usable.</p>
+    </section>
+
+    <section id="toolbar" class="panel">
+      <h2>3. Toolbar controls</h2>
+      <p>The toolbar holds per-window visual controls. These are useful for adjusting one document without changing another.</p>
+
+      <div class="grid">
+        <article>
+          <h3>Background</h3>
+          <p>Choose the editor background for this window. Options include System, soft pastels, Black, and White. Pastel choices include dark-mode counterparts.</p>
+        </article>
+        <article>
+          <h3>Text</h3>
+          <p>Choose the foreground color for both proportional text and monospace verbatim text. Amber and Green are included for a retro terminal feel.</p>
+        </article>
+        <article>
+          <h3>Lines</h3>
+          <p>Toggle Xcode-style line numbers in a left gutter. Line numbers are logical document lines, not wrapped visual rows.</p>
+        </article>
+        <article>
+          <h3>Text size</h3>
+          <p>Choose a zoom preset or use Zoom In, Zoom Out, and Actual Size. Zoom is local to the window.</p>
+        </article>
+        <article>
+          <h3>Tab width</h3>
+          <p>Choose visual tab width presets: 2, 4, 8, or 16. Tabs remain tab characters in the file.</p>
+        </article>
+        <article>
+          <h3>Full-screen width</h3>
+          <p>Choose how wide the text should be in full screen. This makes full-screen editing more readable on wide displays.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="editing" class="panel">
+      <h2>4. Editing text</h2>
+      <p>NiceTextEditor uses standard macOS text editing behavior: selection, copy, paste, undo, redo, drag selection, contextual menus, and services work through AppKit.</p>
+      <h3>Spelling, grammar, and substitutions</h3>
+      <p>The editor enables the standard macOS text assistance system. Look in the Edit menu for:</p>
+      <ul>
+        <li>Spelling and Grammar</li>
+        <li>Substitutions</li>
+        <li>Smart quotes and smart dashes</li>
+        <li>Text Replacement</li>
+        <li>Link detection and data detectors</li>
+      </ul>
+      <p>These features can change typed text when enabled, just like in other native macOS text views.</p>
+    </section>
+
+    <section id="find-go" class="panel">
+      <h2>5. Find and Go To Line</h2>
+      <h3>Find</h3>
+      <p>Use standard macOS find commands:</p>
+      <ul>
+        <li><kbd>⌘F</kbd> opens the find interface.</li>
+        <li><kbd>⌘G</kbd> moves to the next match.</li>
+        <li><kbd>⇧⌘G</kbd> moves to the previous match.</li>
+      </ul>
+
+      <h3>Go To Line</h3>
+      <p>Use <strong>Edit &gt; Go To Line…</strong> or <kbd>⌘L</kbd>. The prompt accepts line numbers and aliases.</p>
+      <table>
+        <thead>
+          <tr><th>Input</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>i</code>, where <code>i</code> is within the file</td><td>Go to line <code>i</code>.</td></tr>
+          <tr><td><code>i</code> greater than the number of lines</td><td>Go to the last line.</td></tr>
+          <tr><td><code>0</code></td><td>Go to line 1.</td></tr>
+          <tr><td><code>start</code> or <code>s</code></td><td>Go to line 1.</td></tr>
+          <tr><td><code>end</code>, <code>eof</code>, or <code>e</code></td><td>Go to the last line.</td></tr>
+          <tr><td>negative number</td><td>Count back from the end, clamped to the document.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="worksheet" class="panel worksheet-panel">
+      <h2>6. UNIX worksheet</h2>
+      <p>Each document owns its own background <code>/bin/zsh</code> process. Terminal is not launched. The shell belongs to the document window, so separate documents can maintain separate shell state.</p>
+      <div class="worksheet-example">
+        <div><span class="prompt">%</span> date</div>
+        <div class="output">Tue Jun 16 21:00:00 CEST 2026</div>
+      </div>
+
+      <h3>Run selected commands</h3>
+      <p>Select text containing a shell command and press <kbd>⇧Return</kbd>, or use <strong>Worksheet &gt; Run Selection in Shell</strong>. Output is inserted after the selection.</p>
+
+      <h3>Filter selected text</h3>
+      <p>Select text, then use one of the pipeline commands:</p>
+      <ul>
+        <li><kbd>⌘E</kbd>: prompt for a zsh pipeline, send the selection as standard input, and replace the selection with output.</li>
+        <li><kbd>⇧⌘E</kbd>: prompt for a zsh pipeline, send the selection as standard input, and insert output after the selection.</li>
+      </ul>
+      <p>The pipeline prompt focuses the command field automatically. Use Up and Down Arrow in the prompt to browse command history shared across documents.</p>
+
+      <h3>Startup file</h3>
+      <p>NiceTextEditor creates and sources this file before starting each document shell:</p>
+      <pre><code>~/Library/Application Support/NiceTextEditor/WorksheetStartup.zsh</code></pre>
+      <p>Use it for <code>PATH</code>, aliases, shell functions, exports, and zsh options. Settings includes a button to reveal it in Finder. Use <strong>Worksheet &gt; Reset Document Shell</strong> to restart the active shell after changes.</p>
+    </section>
+
+    <section id="settings" class="panel">
+      <h2>7. Settings</h2>
+      <p>Settings contains global configuration that should apply across document windows.</p>
+      <ul>
+        <li><strong>Editor Font:</strong> choose the proportional editor font with the standard macOS Font panel.</li>
+        <li><strong>Worksheet shortcuts:</strong> configure command shortcuts for worksheet execution and filtering.</li>
+        <li><strong>Worksheet startup file:</strong> reveal the shell startup file in Finder.</li>
+      </ul>
+      <p>Per-window choices such as zoom, line numbers, tab width, and colors are intentionally not stored in Settings.</p>
+    </section>
+
+    <section id="verbatim" class="panel">
+      <h2>8. Verbatim blocks</h2>
+      <p>NiceTextEditor recognizes nroff-style <code>.VB</code> and <code>.VE</code> marker lines for display only. Text between the markers is shown in SF Mono, while the marker lines and all document content remain plain text.</p>
+      <pre><code>This is proportional text.
+.VB
+This line is shown in SF Mono.
+    Indentation is preserved visually.
+.VE
+Back to proportional text.</code></pre>
+      <p>This is useful for code snippets, command output, and examples in otherwise prose-like text.</p>
+    </section>
+
+    <section id="shortcuts" class="panel">
+      <h2>9. Keyboard shortcuts</h2>
+      <table>
+        <thead>
+          <tr><th>Shortcut</th><th>Command</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><kbd>⌘F</kbd></td><td>Find</td></tr>
+          <tr><td><kbd>⌘G</kbd></td><td>Find Next</td></tr>
+          <tr><td><kbd>⇧⌘G</kbd></td><td>Find Previous</td></tr>
+          <tr><td><kbd>⌘L</kbd></td><td>Go To Line</td></tr>
+          <tr><td><kbd>⇧⌘L</kbd></td><td>Toggle Line Numbers</td></tr>
+          <tr><td><kbd>⌘+</kbd></td><td>Zoom In</td></tr>
+          <tr><td><kbd>⌘-</kbd></td><td>Zoom Out</td></tr>
+          <tr><td><kbd>⌘0</kbd></td><td>Actual Size</td></tr>
+          <tr><td><kbd>⇧Return</kbd></td><td>Run Selection in Shell</td></tr>
+          <tr><td><kbd>⌘E</kbd></td><td>Replace Selection with Pipeline Output</td></tr>
+          <tr><td><kbd>⇧⌘E</kbd></td><td>Insert Pipeline Output After Selection</td></tr>
+        </tbody>
+      </table>
+      <p class="small">Worksheet shortcuts can be changed in Settings.</p>
+    </section>
+
+    <section id="tips" class="panel">
+      <h2>10. Tips</h2>
+      <ul>
+        <li>Use line numbers and colors to distinguish open documents during focused work.</li>
+        <li>Use Amber or Green text on a dark background for an old-school terminal worksheet mood.</li>
+        <li>Use full-screen text width presets to keep long prose readable on wide monitors.</li>
+        <li>If a command behaves differently from Terminal, check <code>WorksheetStartup.zsh</code>; the app shell is real zsh, but it has its own startup file.</li>
+        <li>For commands that wait for standard input forever, redirect input explicitly, for example <code>&lt; /dev/null</code>.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>NiceTextEditor — plain text, native macOS, colorful worksheet energy.</p>
+  </footer>
+</body>
+</html>

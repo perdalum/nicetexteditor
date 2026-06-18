@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- HTML user manual under `docs/`, with a separate CSS file and styling that matches NiceTextEditor's plain-text worksheet aesthetic.
 - Go To Line command in the Edit menu with Command-L and support for start/end aliases, clamped line numbers, and negative offsets from the end.
 - Per-window Xcode-style line numbers with a toolbar toggle and View menu command using Command-Shift-L.
 
