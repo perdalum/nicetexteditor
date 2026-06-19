@@ -585,8 +585,10 @@ struct MarkupTextEditor: NSViewRepresentable {
             let fullRange = NSRange(location: 0, length: nsString.length)
             let selectedRanges = textView.selectedRanges
             let proportionalFont = resolvedProportionalFont()
+            let quoteFont = NSFontManager.shared.convert(proportionalFont, toHaveTrait: .italicFontMask)
             let monospaceFont = NSFont.monospacedSystemFont(ofSize: CGFloat(parent.fontSize), weight: .regular)
             let proportionalParagraphStyle = paragraphStyle(for: proportionalFont)
+            let quoteParagraphStyle = paragraphStyle(for: quoteFont)
             let monospaceParagraphStyle = paragraphStyle(for: monospaceFont)
 
             textView.backgroundColor = parent.backgroundColor
@@ -599,11 +601,19 @@ struct MarkupTextEditor: NSViewRepresentable {
                     .paragraphStyle: proportionalParagraphStyle
                 ], range: fullRange)
 
-                for range in verbatimBodyRanges(in: nsString) {
+                for range in blockBodyRanges(in: nsString, startMarker: ".VB", endMarker: ".VE") {
                     storage.addAttributes([
                         .font: monospaceFont,
                         .foregroundColor: parent.foregroundColor,
                         .paragraphStyle: monospaceParagraphStyle
+                    ], range: range)
+                }
+
+                for range in blockBodyRanges(in: nsString, startMarker: ".QB", endMarker: ".QE") {
+                    storage.addAttributes([
+                        .font: quoteFont,
+                        .foregroundColor: parent.foregroundColor,
+                        .paragraphStyle: quoteParagraphStyle
                     ], range: range)
                 }
                 storage.endEditing()
@@ -645,9 +655,9 @@ struct MarkupTextEditor: NSViewRepresentable {
             return NSFont.systemFont(ofSize: CGFloat(parent.fontSize), weight: .regular)
         }
 
-        private func verbatimBodyRanges(in text: NSString) -> [NSRange] {
+        private func blockBodyRanges(in text: NSString, startMarker: String, endMarker: String) -> [NSRange] {
             var ranges: [NSRange] = []
-            var insideVerbatimBlock = false
+            var insideBlock = false
             var searchLocation = 0
             let textLength = text.length
 
@@ -660,11 +670,11 @@ struct MarkupTextEditor: NSViewRepresentable {
                 let line = text.substring(with: lineRange)
                 let marker = line.trimmingCharacters(in: .whitespacesAndNewlines)
 
-                if marker == ".VB" {
-                    insideVerbatimBlock = true
-                } else if marker == ".VE" {
-                    insideVerbatimBlock = false
-                } else if insideVerbatimBlock, lineRange.length > 0 {
+                if marker == startMarker {
+                    insideBlock = true
+                } else if marker == endMarker {
+                    insideBlock = false
+                } else if insideBlock, lineRange.length > 0 {
                     ranges.append(lineRange)
                 }
 

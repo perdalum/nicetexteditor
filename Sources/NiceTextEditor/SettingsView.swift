@@ -49,7 +49,7 @@ struct SettingsView: View {
             }
 
             Section("Markup") {
-                Text("Lines between .VB and .VE are displayed in SF Mono. The file remains plain text and the markers are preserved.")
+                Text("Lines between .VB and .VE are displayed in SF Mono. Lines between .QB and .QE are displayed in the editor font italic. The file remains plain text and the markers are preserved.")
                     .foregroundStyle(.secondary)
             }
         }

@@ -24,7 +24,7 @@ See the HTML manual at [`docs/manual.html`](docs/manual.html).
 - Adds visual-only scroll space below the text so the final line can be positioned about one quarter down from the top of the editor.
 - Supports narrow document windows with an adaptive status bar.
 - Keeps files as plain text while rendering selected markup regions differently.
-- Shows nroff-style verbatim blocks in SF Mono:
+- Shows nroff-style verbatim blocks in SF Mono and quote blocks in italic:
 
 ```text
 This is proportional text.
@@ -32,10 +32,13 @@ This is proportional text.
 This line is shown in SF Mono.
     Indentation is preserved visually.
 .VE
+.QB
+This quote block is shown in the regular editor font, italic.
+.QE
 Back to proportional text.
 ```
 
-Only the text between `.VB` and `.VE` is rendered monospace; the marker lines remain normal text and are saved unchanged.
+Only the text between `.VB` and `.VE` is rendered monospace; only the text between `.QB` and `.QE` is rendered italic. The marker lines remain normal text and are saved unchanged.
 
 ## Requirements
 

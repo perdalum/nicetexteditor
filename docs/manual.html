@@ -30,7 +30,7 @@
         <li><a href="#find-go">Find and Go To Line</a></li>
         <li><a href="#worksheet">UNIX worksheet</a></li>
         <li><a href="#settings">Settings</a></li>
-        <li><a href="#verbatim">Verbatim blocks</a></li>
+        <li><a href="#verbatim">Verbatim and quote blocks</a></li>
         <li><a href="#shortcuts">Keyboard shortcuts</a></li>
         <li><a href="#tips">Tips</a></li>
       </ol>
@@ -168,15 +168,18 @@
     </section>
 
     <section id="verbatim" class="panel">
-      <h2>8. Verbatim blocks</h2>
-      <p>NiceTextEditor recognizes nroff-style <code>.VB</code> and <code>.VE</code> marker lines for display only. Text between the markers is shown in SF Mono, while the marker lines and all document content remain plain text.</p>
+      <h2>8. Verbatim and quote blocks</h2>
+      <p>NiceTextEditor recognizes nroff-style marker lines for display only. Text between <code>.VB</code> and <code>.VE</code> is shown in SF Mono. Text between <code>.QB</code> and <code>.QE</code> is shown in the regular editor font, italic. The marker lines and all document content remain plain text.</p>
       <pre><code>This is proportional text.
 .VB
 This line is shown in SF Mono.
     Indentation is preserved visually.
 .VE
+.QB
+This quote block is shown in the regular editor font, italic.
+.QE
 Back to proportional text.</code></pre>
-      <p>This is useful for code snippets, command output, and examples in otherwise prose-like text.</p>
+      <p>Verbatim blocks are useful for code snippets, command output, and examples. Quote blocks are useful for prose excerpts that should stand apart without changing the file format.</p>
     </section>
 
     <section id="shortcuts" class="panel">
