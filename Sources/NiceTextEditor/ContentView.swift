@@ -12,7 +12,7 @@ struct ContentView: View {
     @State private var editorBackgroundColor: EditorBackgroundColor = .system
     @State private var editorForegroundColor: EditorForegroundColor = .system
     @State private var showLineNumbers = false
-    @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
+    @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "control-shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
     @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
 
@@ -82,6 +82,9 @@ struct ContentView: View {
                 insertPipelineAfterSelectionShortcut: insertPipelineAfterSelectionShortcut,
                 executeSelection: { selectedText in
                     try await worksheetShell.execute(selectedText)
+                },
+                replaceSelectionWithShellOutput: { selectedText in
+                    try await worksheetShell.executeStdoutOnly(selectedText)
                 },
                 replaceSelectionWithPipeline: { selectedText in
                     guard let command = promptForPipelineCommand(title: "Replace Selection with Command Output") else { return nil }
@@ -263,6 +266,9 @@ struct ContentView: View {
     }
 
     private func migrateWorksheetShortcutDefaults() {
+        if executeSelectionShortcut == "shift-return" {
+            executeSelectionShortcut = "control-shift-return"
+        }
         if replaceSelectionWithPipelineShortcut == "command-r" {
             replaceSelectionWithPipelineShortcut = "command-e"
         }

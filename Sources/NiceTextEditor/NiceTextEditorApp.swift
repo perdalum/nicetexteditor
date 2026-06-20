@@ -99,7 +99,12 @@ private struct WorksheetCommands: Commands {
             Button("Run Selection in Shell") {
                 AppCommands.perform("runSelectionInShell:")
             }
-            .keyboardShortcut(.return, modifiers: [.shift])
+            .keyboardShortcut(.return, modifiers: [.control, .shift])
+
+            Button("Replace Selection with Stdout") {
+                AppCommands.perform("replaceSelectionWithShellOutput:")
+            }
+            .keyboardShortcut(.return, modifiers: [.control])
 
             Button("Replace Selection with Pipeline Output…") {
                 AppCommands.perform("replaceSelectionWithPipeline:")

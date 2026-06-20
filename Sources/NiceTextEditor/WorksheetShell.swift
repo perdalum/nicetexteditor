@@ -49,6 +49,15 @@ final class WorksheetShell: ObservableObject {
         try await runInShell(commandText)
     }
 
+    func executeStdoutOnly(_ commandText: String) async throws -> String {
+        let script = """
+        {
+        \(commandText)
+        } 2>/dev/null
+        """
+        return try await runInShell(script)
+    }
+
     func runPipeline(_ command: String, stdin: String) async throws -> String {
         let temporaryFileURL = try writeTemporaryStandardInput(stdin)
         let script = """

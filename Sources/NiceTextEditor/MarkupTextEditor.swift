@@ -3,6 +3,7 @@ import SwiftUI
 
 private enum WorksheetEditorCommand {
     case executeSelection
+    case replaceSelectionWithShellOutput
     case replaceSelectionWithPipeline
     case insertPipelineAfterSelection
     case resetDocumentShell
@@ -18,7 +19,7 @@ private protocol WorksheetTextViewDelegate: AnyObject {
 
 private final class WorksheetTextView: NSTextView {
     weak var worksheetCommandDelegate: WorksheetTextViewDelegate?
-    var executeSelectionShortcut = "shift-return"
+    var executeSelectionShortcut = "control-shift-return"
     var replaceSelectionWithPipelineShortcut = "command-e"
     var insertPipelineAfterSelectionShortcut = "command-shift-e"
 
@@ -34,6 +35,10 @@ private final class WorksheetTextView: NSTextView {
 
     @objc func runSelectionInShell(_ sender: Any?) {
         worksheetCommandDelegate?.worksheetTextView(self, didRequest: .executeSelection)
+    }
+
+    @objc func replaceSelectionWithShellOutput(_ sender: Any?) {
+        worksheetCommandDelegate?.worksheetTextView(self, didRequest: .replaceSelectionWithShellOutput)
     }
 
     @objc func replaceSelectionWithPipeline(_ sender: Any?) {
@@ -95,6 +100,11 @@ private final class WorksheetTextView: NSTextView {
     private func handleWorksheetShortcut(_ event: NSEvent) -> Bool {
         if event.matchesShortcut(executeSelectionShortcut) {
             runSelectionInShell(nil)
+            return true
+        }
+
+        if event.matchesShortcut("control-return") {
+            replaceSelectionWithShellOutput(nil)
             return true
         }
 
@@ -178,6 +188,7 @@ struct MarkupTextEditor: NSViewRepresentable {
     let replaceSelectionWithPipelineShortcut: String
     let insertPipelineAfterSelectionShortcut: String
     let executeSelection: @MainActor (String) async throws -> String
+    let replaceSelectionWithShellOutput: @MainActor (String) async throws -> String
     let replaceSelectionWithPipeline: @MainActor (String) async throws -> String?
     let insertPipelineAfterSelection: @MainActor (String) async throws -> String?
     let resetDocumentShell: @MainActor () -> Void
@@ -508,7 +519,7 @@ struct MarkupTextEditor: NSViewRepresentable {
             case .toggleLineNumbers:
                 Task { @MainActor in parent.toggleLineNumbers() }
                 return
-            case .executeSelection, .replaceSelectionWithPipeline, .insertPipelineAfterSelection:
+            case .executeSelection, .replaceSelectionWithShellOutput, .replaceSelectionWithPipeline, .insertPipelineAfterSelection:
                 break
             }
 
@@ -527,6 +538,9 @@ struct MarkupTextEditor: NSViewRepresentable {
                     case .executeSelection:
                         let output = try await parent.executeSelection(selectedText)
                         insert(output, after: selectedRange, selectedText: selectedText, in: textView)
+                    case .replaceSelectionWithShellOutput:
+                        let output = try await parent.replaceSelectionWithShellOutput(selectedText)
+                        replace(range: selectedRange, with: output, in: textView)
                     case .replaceSelectionWithPipeline:
                         guard let output = try await parent.replaceSelectionWithPipeline(selectedText) else { return }
                         replace(range: selectedRange, with: output, in: textView)
@@ -698,6 +712,10 @@ private extension NSEvent {
         switch rawValue {
         case "shift-return":
             return isReturn && normalized == [.shift]
+        case "control-return":
+            return isReturn && normalized == [.control]
+        case "control-shift-return":
+            return isReturn && normalized == [.control, .shift]
         case "command-return":
             return isReturn && normalized == [.command]
         case "command-shift-return":

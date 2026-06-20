@@ -4,12 +4,22 @@ All notable changes to NiceTextEditor will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses semantic versioning.
 
-## [Unreleased]
+## [1.3.0] - 2026-06-20
 
 ### Added
 
+- Worksheet command to execute the selection and replace it with stdout, available with Control-Return.
 - `.QB` / `.QE` quote markup that renders block contents in the regular editor font, italic, while keeping the file plain text.
 - HTML user manual under `docs/`, with a separate CSS file and styling that matches NiceTextEditor's plain-text worksheet aesthetic.
+
+### Changed
+
+- Run Selection in Shell now uses Shift-Control-Return by default.
+
+## [1.2.0] - 2026-06-18
+
+### Added
+
 - Go To Line command in the Edit menu with Command-L and support for start/end aliases, clamped line numbers, and negative offsets from the end.
 - Per-window Xcode-style line numbers with a toolbar toggle and View menu command using Command-Shift-L.
 

@@ -87,7 +87,8 @@ Each document window owns its own background `/bin/zsh` process. It runs inside 
 
 Default worksheet shortcuts:
 
-- Shift-Return: send the selected text to the document shell and insert command output after the selection.
+- Shift-Control-Return: send the selected text to the document shell and insert command output after the selection.
+- Control-Return: send the selected text to the document shell and replace the selection with stdout.
 - Command-E: prompt for a zsh command or pipeline, send the selected text as standard input, and replace the selection with stdout/stderr.
 - Command-Shift-E: prompt for a zsh command or pipeline, send the selected text as standard input, and insert stdout/stderr after the selection.
 

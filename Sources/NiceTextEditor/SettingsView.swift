@@ -3,7 +3,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @AppStorage("proportionalFontName") private var proportionalFontName = "SF Pro"
-    @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "shift-return"
+    @AppStorage("executeSelectionShortcut") private var executeSelectionShortcut = "control-shift-return"
     @AppStorage("replaceSelectionWithPipelineShortcut") private var replaceSelectionWithPipelineShortcut = "command-e"
     @AppStorage("insertPipelineAfterSelectionShortcut") private var insertPipelineAfterSelectionShortcut = "command-shift-e"
     @StateObject private var fontPanel = FontPanelCoordinator()
@@ -65,6 +65,9 @@ struct SettingsView: View {
     }
 
     private func migrateWorksheetShortcutDefaults() {
+        if executeSelectionShortcut == "shift-return" {
+            executeSelectionShortcut = "control-shift-return"
+        }
         if replaceSelectionWithPipelineShortcut == "command-r" {
             replaceSelectionWithPipelineShortcut = "command-e"
         }
@@ -155,6 +158,8 @@ private final class FontPanelCoordinator: NSObject, ObservableObject {
 private struct ShortcutChoices: View {
     var body: some View {
         Text("Shift Return").tag("shift-return")
+        Text("Control Return").tag("control-return")
+        Text("Control Shift Return").tag("control-shift-return")
         Text("Command Return").tag("command-return")
         Text("Command Shift Return").tag("command-shift-return")
         Text("Command E").tag("command-e")
